@@ -227,7 +227,15 @@ pnpm check
 
 `pnpm check` はLint、型検査、ESMビルド、15件以上のテスト、公開パッケージ内容の検査を実行します。
 
-リリース時は `package.json` と `CHANGELOG.md` のバージョンを更新してGitHub Releaseを公開します。付属のワークフローでnpmへ公開するには、リポジトリのActions secretsへ `NPM_TOKEN` を登録してください。
+リリース時は `package.json` と `CHANGELOG.md` のバージョンを更新してGitHub Releaseを公開します。
+
+npmへの公開はアクセストークンで行います。リポジトリの環境 `npm` へ、公開権限のある `NPM_TOKEN` を登録してください。
+
+トークンを使わず trusted publishing (OIDC) にする場合は、次の3点をすべて揃える必要があります。1つでも欠けると、未認証の公開として扱われ `npm error 404 Not Found - PUT` で失敗します (npmは権限不足を404で返します)。
+
+1. npmjs.com の `dotterel-ui` → Settings → Trusted publisher で、GitHub Actions・Repository `goto-kamoshirenai/dotterel-ui`・Workflow `publish.yml`・Environment `npm` を登録する
+2. `publish.yml` から `registry-url` と `NODE_AUTH_TOKEN` を外す (`.npmrc` に認証設定が残っているとOIDCの交換が行われない)
+3. npm 11.5.1 以降で実行する (`npm install --global npm@latest`)
 
 ## Dotterel Dots フォント
 
