@@ -229,6 +229,36 @@ pnpm check
 
 リリース時は `package.json` と `CHANGELOG.md` のバージョンを更新してGitHub Releaseを公開します。付属のワークフローでnpmへ公開するには、リポジトリのActions secretsへ `NPM_TOKEN` を登録してください。
 
+## Dotterel Dots フォント
+
+アイコンと同じ正方形ドットで設計した、大文字・数字・基本記号用の表示フォントを同梱しています。`styles.css` を読み込むと `Dotterel Dots` が登録され、進捗率などのドット表示へ自動的に使用されます。
+
+```css
+.status {
+  font-family: "Dotterel Dots", monospace;
+  font-synthesis: none;
+}
+```
+
+収録文字は `A-Z`、`0-9`、空白、`! "%'()+,-./:;=?[\]_|` です。小文字や未収録記号はフォールバックフォントで表示されます。
+
+フォントの実体はサブパスから参照できます。自分で `@font-face` を書く場合や、Next.jsの `next/font/local` で読み込む場合に使います。
+
+```tsx
+import localFont from "next/font/local";
+
+const dotterelDots = localFont({
+  src: "../node_modules/dotterel-ui/fonts/dotterel-dots.woff2",
+  variable: "--font-dotterel-dots",
+});
+```
+
+配布形式は WOFF2、OTF、TTF です。グリフを変更した場合は、次のコマンドで3形式と見本SVGを再生成できます。
+
+```bash
+pnpm font:generate
+```
+
 ## ライセンス
 
 [MIT](./LICENSE)

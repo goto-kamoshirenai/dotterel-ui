@@ -1,3 +1,18 @@
+@font-face {
+  font-family: "Dotterel Dots";
+  src:
+    url("./fonts/dotterel-dots.woff2") format("woff2"),
+    url("./fonts/dotterel-dots.otf") format("opentype"),
+    url("./fonts/dotterel-dots.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+  unicode-range:
+    U+0020, U+0021, U+0022, U+0025, U+0027, U+0028, U+0029, U+002B,
+    U+002C, U+002D, U+002E, U+002F, U+0030-0039, U+003A, U+003B, U+003D,
+    U+003F, U+0041-005A, U+005B, U+005C, U+005D, U+005F, U+007C;
+}
+
 @layer dotterel.tokens, dotterel.components;
 
 @layer dotterel.tokens {
@@ -28,7 +43,8 @@
     --dotterel-radius-full: 999px;
     --dotterel-border-width: 2px;
     --dotterel-font-family: inherit;
-    --dotterel-font-family-dot: ui-monospace, "Cascadia Code", "Consolas", monospace;
+    --dotterel-font-family-dot:
+      "Dotterel Dots", ui-monospace, "Cascadia Code", "Consolas", monospace;
     --dotterel-font-weight: 600;
 
     --dotterel-motion-fast: 120ms;
@@ -380,6 +396,7 @@
   .dotterel-percent {
     flex: none;
     font-family: var(--dotterel-font-family-dot);
+    font-synthesis: none;
     font-variant-numeric: tabular-nums;
   }
 

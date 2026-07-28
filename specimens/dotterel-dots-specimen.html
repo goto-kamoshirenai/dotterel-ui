@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dotterel Dots specimen</title>
+    <style>
+      @font-face {
+        font-family: "Dotterel Dots";
+        src: url("../src/fonts/dotterel-dots.woff2") format("woff2");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      :root {
+        color: #181818;
+        background: #f4f1e8;
+        font-family: Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 1100px;
+        margin: 0;
+        padding: 56px;
+      }
+
+      main {
+        max-width: 1488px;
+        min-height: calc(100vh - 112px);
+        margin: auto;
+        padding: 36px;
+        border: 2px solid;
+      }
+
+      header {
+        padding-bottom: 30px;
+        border-bottom: 2px solid;
+      }
+
+      p {
+        margin: 0 0 20px;
+        color: #705f4b;
+        font-size: 18px;
+        letter-spacing: 0.18em;
+      }
+
+      h1,
+      .glyphs,
+      .sample {
+        margin: 0;
+        font-family: "Dotterel Dots", monospace;
+        font-synthesis: none;
+        font-weight: 400;
+        line-height: 1.45;
+      }
+
+      h1 {
+        font-size: 92px;
+      }
+
+      section {
+        padding-top: 32px;
+      }
+
+      .glyphs {
+        font-size: 62px;
+        overflow-wrap: anywhere;
+      }
+
+      .sample {
+        margin-top: 36px;
+        padding: 24px;
+        background: #181818;
+        color: #f4f1e8;
+        font-size: 58px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p>DOTTEREL-UI / ORIGINAL DISPLAY TYPEFACE</p>
+        <h1>DOTTEREL DOTS</h1>
+      </header>
+      <section>
+        <p>UPPERCASE / VARIABLE WIDTH / 5 ROW GRID</p>
+        <div class="glyphs">
+          ABCDEFGHIJKLM<br />
+          NOPQRSTUVWXYZ
+        </div>
+      </section>
+      <section>
+        <p>NUMERALS</p>
+        <div class="glyphs">0123456789</div>
+      </section>
+      <section>
+        <p>SYMBOLS</p>
+        <div class="glyphs">! "% ' ( ) + , - . / : ; = ? [ \ ] _ |</div>
+      </section>
+      <div class="sample">[STATUS] = 42%</div>
+    </main>
+  </body>
+</html>
