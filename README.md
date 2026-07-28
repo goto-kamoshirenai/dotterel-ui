@@ -229,13 +229,11 @@ pnpm check
 
 リリース時は `package.json` と `CHANGELOG.md` のバージョンを更新してGitHub Releaseを公開します。
 
-npmへの公開はアクセストークンで行います。リポジトリの環境 `npm` へ、公開権限のある `NPM_TOKEN` を登録してください。
+npmへの公開は trusted publishing (OIDC) で行うため、トークンの登録は不要です。成立には次の3点がすべて必要で、1つでも欠けると未認証の公開として扱われ `npm error 404 Not Found - PUT` で失敗します (npmは権限不足を404で返します)。
 
-トークンを使わず trusted publishing (OIDC) にする場合は、次の3点をすべて揃える必要があります。1つでも欠けると、未認証の公開として扱われ `npm error 404 Not Found - PUT` で失敗します (npmは権限不足を404で返します)。
-
-1. npmjs.com の `dotterel-ui` → Settings → Trusted publisher で、GitHub Actions・Repository `goto-kamoshirenai/dotterel-ui`・Workflow `publish.yml`・Environment `npm` を登録する
-2. `publish.yml` から `registry-url` と `NODE_AUTH_TOKEN` を外す (`.npmrc` に認証設定が残っているとOIDCの交換が行われない)
-3. npm 11.5.1 以降で実行する (`npm install --global npm@latest`)
+1. npmjs.com の `dotterel-ui` → Settings → Trusted publisher に、GitHub Actions・Repository `goto-kamoshirenai/dotterel-ui`・Workflow `publish.yml`・Environment `npm` を登録する
+2. `publish.yml` に認証設定を置かない (`registry-url` や `NODE_AUTH_TOKEN` があると `.npmrc` に資格情報が書かれ、OIDCの交換が行われない)
+3. npm 11.5.1 以降で実行する
 
 ## Dotterel Dots フォント
 

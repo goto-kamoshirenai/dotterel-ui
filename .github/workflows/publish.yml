@@ -20,21 +20,20 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
 
-      # registry-url を指定すると setup-node が
+      # registry-url は指定しない。指定すると setup-node が .npmrc へ
       #   //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
-      # を .npmrc へ書く。この行がある以上、NODE_AUTH_TOKEN を渡さないと
-      # 空の資格情報で公開しようとして PUT が 404 になる
-      # (npmは権限不足を404で返す)。
-      #
-      # trusted publishing (OIDC) へ移す場合は、この registry-url と下の
-      # NODE_AUTH_TOKEN の両方を外し、npm側で公開元を登録する (READMEを参照)。
-      # 認証設定が残っているとOIDCの交換は行われない。
+      # を書き、認証設定が存在する扱いになってOIDCの交換が行われない
+      # (空の資格情報で公開しようとして PUT が 404 になる)。
+      # 既定のレジストリが registry.npmjs.org なので指定は要らない。
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 24
           package-manager-cache: false
-          registry-url: https://registry.npmjs.org
+
+      # trusted publishing は npm 11.5.1 以降。Node同梱版に依存しないよう明示的に上げる
+      - name: Use an npm that supports trusted publishing
+        run: npm install --global npm@latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -42,7 +41,7 @@ jobs:
       - name: Check package
         run: pnpm check
 
+      # 資格情報は渡さない。npm側に登録した公開元 (Repository / Workflow /
+      # Environment) と一致すれば、OIDCの交換で公開できる
       - name: Publish
-        run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
