@@ -21,10 +21,10 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
-          cache: pnpm
+          node-version: 24
+          package-manager-cache: false
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
@@ -34,6 +34,4 @@ jobs:
         run: pnpm check
 
       - name: Publish
-        run: pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
