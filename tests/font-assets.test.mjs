@@ -68,3 +68,14 @@ test("the stylesheet loads the webfont before its fallbacks", async () => {
     /--dotterel-font-family-dot:\s*"Dotterel Dots", ui-monospace/,
   );
 });
+
+test("the dot font is reachable through a single utility class", async () => {
+  const css = await readFile(new URL("../dist/styles.css", import.meta.url), "utf8");
+
+  assert.match(
+    css,
+    /\.dotterel-text\s*{\s*font-family: var\(--dotterel-font-family-dot\);\s*font-synthesis: none;/,
+  );
+  assert.match(css, /\.dotterel-text--uppercase\s*{\s*text-transform: uppercase;/);
+  assert.match(css, /\.dotterel-text--tabular\s*{\s*font-variant-numeric: tabular-nums;/);
+});

@@ -2,6 +2,19 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.3.0 - 2026-07-29
+
+### Added
+
+- カウントアップ・カウントダウン表示の `DotCount` (小数、3桁区切り、接頭辞・接尾辞、
+  イージング、遅延、画面内で開始する `startOn="view"` に対応)
+- 開始・一時停止・再開・リセットを自分で制御する `useDotCount`
+- 同梱フォント `Dotterel Dots` を1行で適用する `DotText` と、
+  Reactを使わない場合のための `.dotterel-text` / `--uppercase` / `--tabular` クラス
+- React非依存の補間・整形関数 `countValue`、`countProgress`、`formatCount`、
+  `resolveCountFormat`、`easingFunction`、`roundTo`、`COUNT_EASING_FUNCTIONS`
+- サブパス `dotterel-ui/count` と `dotterel-ui/text`
+
 ## 0.2.0 - 2026-07-29
 
 ### Added

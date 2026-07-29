@@ -11,6 +11,23 @@ export {
   type DotSize,
 } from "./dots.js";
 export {
+  COUNT_EASINGS,
+  COUNT_EASING_FUNCTIONS,
+  DEFAULT_COUNT_DURATION,
+  DEFAULT_COUNT_EASING,
+  DEFAULT_COUNT_FORMAT,
+  countProgress,
+  countValue,
+  easingFunction,
+  formatCount,
+  resolveCountFormat,
+  roundTo,
+  type CountEasing,
+  type CountEasingFunction,
+  type CountFormat,
+  type ResolvedCountFormat,
+} from "./count.js";
+export {
   DEFAULT_PROGRESS_DOT_COUNT,
   PROGRESS_DOT_COUNTS,
   dotUnitCount,

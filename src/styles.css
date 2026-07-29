@@ -111,8 +111,35 @@
   .dotterel-progress,
   .dotterel-percent,
   .dotterel-progress-value,
+  .dotterel-count,
+  .dotterel-text,
   .dotterel-field {
     box-sizing: border-box;
+  }
+
+  .dotterel-text {
+    font-family: var(--dotterel-font-family-dot);
+    font-synthesis: none;
+  }
+
+  .dotterel-text--uppercase {
+    text-transform: uppercase;
+  }
+
+  .dotterel-text--tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dotterel-count__target {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .dotterel-icon {

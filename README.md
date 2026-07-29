@@ -1,6 +1,6 @@
 # dotterel-ui
 
-ドットを基本単位にした、軽量な React UI ライブラリです。ドットSVGアイコン、リップル付きボタン、進捗表示、Canvas背景エフェクトを提供します。
+ドットを基本単位にした、軽量な React UI ライブラリです。ドットSVGアイコン、リップル付きボタン、進捗表示、カウントアップ、Canvas背景エフェクトを提供します。
 
 - React 18 / 19 対応
 - TypeScript の型定義を同梱
@@ -27,6 +27,7 @@ import "dotterel-ui/styles.css";
 ```tsx
 import {
   DotButton,
+  DotCount,
   DotField,
   DotProgressValue,
   Icon,
@@ -41,6 +42,8 @@ export function Dashboard() {
         <Icon name="check" animation="hover" />
         保存
       </DotButton>
+
+      <DotCount to={12345} suffix=" PT" />
 
       <DotProgressValue
         value={42}
@@ -154,6 +157,79 @@ import { DotLinkAdapter } from "dotterel-ui/button";
 
 進捗が始まっているのに `0%`、完了前なのに `100%` と表示されないよう、途中値は `1%` から `99%` に収めます。
 
+## カウントアップとカウントダウン
+
+`DotCount` は数値をなめらかに変化させて表示します。既定で同梱フォント `Dotterel Dots` と等幅数字が適用されるため、桁が増えても文字が揺れません。
+
+```tsx
+import { DotCount } from "dotterel-ui";
+
+<DotCount to={12345} />
+
+<DotCount to={1284.5} decimals={1} suffix=" KM" duration={2000} />
+```
+
+`from` が `to` より大きければカウントダウンになります。
+
+```tsx
+<DotCount from={100} to={0} suffix="%" easing="ease-in-out" />
+```
+
+主なプロパティは次のとおりです。
+
+| プロパティ | 既定値 | 説明 |
+| --- | --- | --- |
+| `to` | 必須 | 到達する値 |
+| `from` | `0` | 開始する値。`to` より大きければカウントダウン |
+| `duration` | `1400` | 変化にかける時間 (ms) |
+| `delay` | `0` | 開始を遅らせる時間 (ms) |
+| `easing` | `"ease-out"` | `"linear"`、`"ease-in"`、`"ease-out"`、`"ease-in-out"`、または `(progress: number) => number` |
+| `startOn` | `"mount"` | `"mount"`、画面に入ったら開始する `"view"`、`useDotCount` から操作する `"manual"` |
+| `decimals` | `0` | 小数の桁数 |
+| `separator` | `","` | 3桁区切り。`""` で無効 |
+| `decimal` | `"."` | 小数点の文字 |
+| `prefix` / `suffix` | `""` | 数値の前後に付ける文字 |
+| `font` | `"dot"` | `"inherit"` にすると継承フォントで表示する |
+| `label` | なし | 支援技術へ読み上げるラベル |
+| `motion` | `"auto"` | `"auto"`、`"always"`、`"none"` |
+| `onStart` / `onComplete` | なし | 開始時・完了時のコールバック |
+
+`prefers-reduced-motion: reduce` の環境では、既定で最終値をすぐに表示します。読み上げは変化中の数値ではなく到達値だけを1回伝えます。
+
+開始や一時停止を自分で制御する場合は `useDotCount` を使います。
+
+```tsx
+import { DotButton, useDotCount } from "dotterel-ui";
+
+export function Score() {
+  const { text, status, start, pause, resume } = useDotCount({
+    to: 9800,
+    autoStart: false,
+    suffix: " PT",
+  });
+
+  return (
+    <p>
+      <span className="dotterel-text dotterel-text--tabular">{text}</span>
+      <DotButton onClick={status === "paused" ? resume : status === "counting" ? pause : start}>
+        {status === "counting" ? "一時停止" : "開始"}
+      </DotButton>
+    </p>
+  );
+}
+```
+
+`useDotCount` は `value` (生の数値)、`text` (整形後の文字列)、`targetText`、`status` (`"idle"`、`"counting"`、`"paused"`、`"completed"`)、`start`、`pause`、`resume`、`reset` を返します。`value` は `DotProgress` の `value` にそのまま渡せます。
+
+整形と補間の関数は React に依存しない `dotterel-ui/core` からも使えます。
+
+```ts
+import { countValue, formatCount } from "dotterel-ui/core";
+
+formatCount(1234567); // "1,234,567"
+countValue(0, 100, 0.5, "linear"); // 50
+```
+
 ## 背景エフェクト
 
 `DotField` は依存ライブラリのない2D Canvasエフェクトです。既定では画面全体に固定され、操作やアクセシビリティツリーへ干渉しません。
@@ -211,9 +287,11 @@ OS設定に応じたダークテーマが標準で有効です。明示的に切
 ```tsx
 import { DotButton } from "dotterel-ui/button";
 import { ratioOf } from "dotterel-ui/core";
+import { DotCount } from "dotterel-ui/count";
 import { DotField } from "dotterel-ui/effects";
 import { Icon } from "dotterel-ui/icon";
 import { DotProgress } from "dotterel-ui/progress";
+import { DotText } from "dotterel-ui/text";
 ```
 
 `dotterel-ui/core` は React に依存しません。
@@ -225,7 +303,7 @@ pnpm install
 pnpm check
 ```
 
-`pnpm check` はLint、型検査、ESMビルド、15件以上のテスト、公開パッケージ内容の検査を実行します。
+`pnpm check` はLint、型検査、ESMビルド、30件以上のテスト、公開パッケージ内容の検査を実行します。
 
 リリース時は `package.json` と `CHANGELOG.md` のバージョンを更新してGitHub Releaseを公開します。
 
@@ -237,11 +315,33 @@ npmへの公開は trusted publishing (OIDC) で行うため、トークンの�
 
 ## Dotterel Dots フォント
 
-アイコンと同じ正方形ドットで設計した、大文字・数字・基本記号用の表示フォントを同梱しています。`styles.css` を読み込むと `Dotterel Dots` が登録され、進捗率などのドット表示へ自動的に使用されます。
+アイコンと同じ正方形ドットで設計した、大文字・数字・基本記号用の表示フォントを同梱しています。`styles.css` を読み込むと `Dotterel Dots` が登録され、進捗率やカウンターへ自動的に使用されます。
+
+任意の要素へ適用する最短の方法は `DotText` です。収録字形が大文字だけなので、既定で `text-transform: uppercase` が付きます。
+
+```tsx
+import { DotText } from "dotterel-ui";
+
+<DotText as="h2">system online</DotText>
+
+<DotText tabular>2026-07-29 12:00</DotText>
+
+<DotText transform="none">Mixed Case</DotText>
+```
+
+`as` は `span` (既定)、`div`、`p`、`strong`、`em`、`code`、`time`、`label`、`figcaption`、`dt`、`dd`、`li`、`h1`〜`h6` を受け付けます。`tabular` を付けると数字が等幅になります。
+
+React を使わない場合は、同じ効果のクラスをそのまま指定できます。
+
+```html
+<span class="dotterel-text dotterel-text--uppercase dotterel-text--tabular">score 1200</span>
+```
+
+CSSから直接指定する場合は、フォールバックまで含んだ変数を使います。
 
 ```css
 .status {
-  font-family: "Dotterel Dots", monospace;
+  font-family: var(--dotterel-font-family-dot);
   font-synthesis: none;
 }
 ```
