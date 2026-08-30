@@ -72,6 +72,19 @@ export function Dashboard() {
 
 `label` を省略したアイコンは装飾として `aria-hidden` になります。アイコンだけで意味を伝える場合は、必ず `label` を指定してください。
 
+`animation="hover"` のアイコンは、アイコン自体に加えて、囲んでいる `button`、`a[href]`、`summary`、`role="button"`、`role="link"`、`role="tab"`、`role="menuitem"` にホバーしたときも動きます。無効化された要素では動きません。操作要素ではない要素をきっかけにしたい場合は、その要素へ `dotterel-icon-host` クラスを付けてください。
+
+```tsx
+<button type="button">
+  <Icon name="search" animation="hover" />
+  検索
+</button>
+
+<div className="card dotterel-icon-host">
+  <Icon name="book" animation="hover" />
+</div>
+```
+
 独自アイコンは `#` と `.` の行列で作れます。
 
 ```tsx

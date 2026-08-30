@@ -2,6 +2,16 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.4.1 - 2026-08-30
+
+### Changed
+
+- `animation="hover"` のアイコンが、囲んでいる `button`、`a[href]`、`summary`、
+  `role="button"`、`role="link"`、`role="tab"`、`role="menuitem"` へのホバーでも動く。
+  ボタンやリンクの中のアイコンへ `dotterel-icon-host` を付けて回る必要がなくなる。
+  無効化された要素 (`:disabled`、`aria-disabled="true"`) では動かない
+- 操作要素ではない要素をきっかけにする場合は、これまでどおり `dotterel-icon-host` を使う
+
 ## 0.4.0 - 2026-08-30
 
 ### Added
