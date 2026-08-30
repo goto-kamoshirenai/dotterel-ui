@@ -17,7 +17,9 @@ Node.js 18以上と、`package.json` に記載したpnpmを使用してくださ
 - React以外のランタイム依存を増やさない
 - 意味をHTMLとARIAで成立させ、Canvasやアニメーションだけに依存しない
 - `prefers-reduced-motion` とキーボード操作を保つ
-- 公開APIを追加・変更した場合はREADME、型、テストを同時に更新する
+- 公開APIを追加・変更した場合はREADME、型、テスト、showcaseの表示例を同時に更新する
+- アイコンを追加した場合は `showcase/src/catalog/icon-metadata.ts` へカテゴリとキーワードを足し、
+  showcaseでライト・ダーク・3サイズを目視で確認する
 - 既存のCSS変数と `dotterel-` 接頭辞を維持する
 
 ## リリース

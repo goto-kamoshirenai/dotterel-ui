@@ -1,0 +1,6 @@
+packages:
+  - "showcase"
+
+# showcase の Vite が使う esbuild は、実行環境に合うバイナリを入れる必要がある
+allowBuilds:
+  esbuild: true

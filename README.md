@@ -332,7 +332,28 @@ pnpm install
 pnpm check
 ```
 
-`pnpm check` はLint、型検査、ESMビルド、30件以上のテスト、公開パッケージ内容の検査を実行します。
+`pnpm check` はLint、型検査、ESMビルド、テスト、公開パッケージ内容の検査に加えて、showcase の検査 (`pnpm showcase:check`) を実行します。ライブラリだけを確かめたいときは `pnpm check:lib` を使います。
+
+## showcase
+
+登録済みアイコンとコンポーネントをブラウザで探して試せるカタログを `showcase/` に置いています。npm パッケージには含めず、GitHub Pages へ別サイトとして公開します。
+
+```bash
+pnpm showcase:dev        # 開発サーバー
+pnpm showcase:check      # 型検査、テスト、ビルド
+pnpm showcase:test:e2e   # Playwright (base path は /dotterel-ui/)
+```
+
+showcase は `dotterel-ui` を npm 利用者と同じ公開名で import します。開発中だけ Vite の alias が `src/` を直接指すため、アイコンを直したその場で一覧に反映されます。内部ファイルを直接 import してはいけません。
+
+アイコンを追加したら `showcase/src/catalog/icon-metadata.ts` へカテゴリとキーワードを足します。`Record<IconName, IconMetadata>` なので、忘れると showcase の型検査が落ちます。
+
+画像比較テストはフォント描画が OS ごとに違うため、既定では動きません。基準画像を作った環境でだけ有効にします。
+
+```bash
+SHOWCASE_VISUAL=1 pnpm showcase:test:e2e -- --update-snapshots  # 基準画像を作る
+SHOWCASE_VISUAL=1 pnpm showcase:test:e2e                        # 比較する
+```
 
 リリース時は `package.json` と `CHANGELOG.md` のバージョンを更新してGitHub Releaseを公開します。
 

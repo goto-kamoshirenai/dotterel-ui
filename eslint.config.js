@@ -5,12 +5,12 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**"],
+    ignores: ["dist/**", "node_modules/**", "showcase/dist/**", "showcase/node_modules/**"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx}", "showcase/src/**/*.{ts,tsx}", "showcase/tests/**/*.{ts,tsx}"],
     languageOptions: {
       globals: globals.browser,
     },
@@ -22,7 +22,13 @@ export default tseslint.config(
     },
   },
   {
-    files: ["scripts/**/*.mjs", "tests/**/*.mjs", "eslint.config.js"],
+    files: [
+      "scripts/**/*.mjs",
+      "tests/**/*.mjs",
+      "eslint.config.js",
+      "showcase/*.config.ts",
+      "showcase/e2e/**/*.ts",
+    ],
     languageOptions: {
       globals: globals.node,
     },
