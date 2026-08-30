@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"],
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "dotterel-ui": ["../src/index.ts"],
+      "dotterel-ui/button": ["../src/button/index.ts"],
+      "dotterel-ui/core": ["../src/core/index.ts"],
+      "dotterel-ui/count": ["../src/count/index.ts"],
+      "dotterel-ui/effects": ["../src/effects/index.ts"],
+      "dotterel-ui/icon": ["../src/icon/index.ts"],
+      "dotterel-ui/progress": ["../src/progress/index.ts"],
+      "dotterel-ui/text": ["../src/text/index.ts"]
+    }
+  },
+  "include": ["src", "tests", "e2e", "vite.config.ts", "playwright.config.ts"]
+}
