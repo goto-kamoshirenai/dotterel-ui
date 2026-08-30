@@ -66,7 +66,7 @@ test("rings and diamond points are deterministic", () => {
 });
 
 test("built-in icon definitions are valid and unique", () => {
-  assert.ok(ICON_NAMES.length >= 20);
+  assert.ok(ICON_NAMES.length >= 53);
   const seen = new Set();
 
   for (const name of ICON_NAMES) {
@@ -83,6 +83,73 @@ test("built-in icon definitions are valid and unique", () => {
 
     assert.ok(!seen.has(fingerprint), `${name} is unique`);
     seen.add(fingerprint);
+  }
+});
+
+test("general UI icon names are registered in kebab-case", () => {
+  const required = [
+    "book",
+    "document",
+    "quote",
+    "bookmark",
+    "bookmark-filled",
+    "tag",
+    "building",
+    "desktop",
+    "database",
+    "network",
+    "link",
+    "external-link",
+    "image-off",
+    "message",
+    "grid",
+    "list",
+    "checklist",
+    "filter",
+    "sort",
+    "swap-vertical",
+    "merge",
+    "edit",
+    "copy",
+    "save",
+    "trash",
+    "undo",
+    "stop",
+    "login",
+    "logout",
+    "more-vertical",
+  ];
+
+  assert.equal(new Set(required).size, required.length);
+
+  for (const name of required) {
+    assert.ok(ICON_NAMES.includes(name), `${name} is registered`);
+    assert.ok(ICONS[name], `${name} has a definition`);
+  }
+
+  for (const name of ICON_NAMES) {
+    assert.match(name, /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/, `${name} is kebab-case`);
+  }
+});
+
+test("meanings handled by substitution stay out of the registry", () => {
+  const substituted = [
+    "checkbox",
+    "collection",
+    "dashboard",
+    "search-off",
+    "select-all",
+    "reset",
+    "book-alert",
+    "magazine",
+    "category",
+    "globe",
+    "users",
+    "translate",
+  ];
+
+  for (const name of substituted) {
+    assert.ok(!ICON_NAMES.includes(name), `${name} is expressed by other icons`);
   }
 });
 

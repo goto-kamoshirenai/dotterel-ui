@@ -85,7 +85,23 @@ const SparkleIcon = createDotIcon(
 <SparkleIcon label="新着" shape="diamond" />;
 ```
 
-登録済みの名前は `ICON_NAMES`、定義は `ICONS` から取得できます。
+登録済みの名前は `ICON_NAMES`、定義は `ICONS` から取得できます。すべてのアイコンは5×5のドット行列なので、同じ `size` なら描画サイズが揃います。
+
+| 分類 | 名前 |
+| --- | --- |
+| 基本記号 | `check` `cross` `circle` `dot` `plus` `minus` `alert` `crown` `star` |
+| 移動と並べ替え | `arrow-left` `arrow-right` `chevron-down` `chevron-up` `swap-vertical` `merge` |
+| 再生 | `play` `pause` `stop` `timer` |
+| 表示切替 | `menu` `more-vertical` `grid` `list` `theme-light` `theme-dark` |
+| 検索と絞り込み | `search` `filter` `sort` `checklist` |
+| 編集 | `edit` `copy` `save` `trash` `undo` |
+| 書籍と文書 | `book` `document` `quote` `bookmark` `bookmark-filled` `tag` |
+| 場所と接続 | `home` `building` `desktop` `database` `network` `link` `external-link` `image-off` |
+| 人と連絡 | `user` `message` `login` `logout` `settings` |
+
+### 1記号にしない意味
+
+5×5で判別しにくい意味は、アイコンを増やさずに近い意味の登録済みアイコンへ寄せるか、アイコンを使わずテキストだけで示します。アイコンを複数並べて1つの意味を作ることはしません。
 
 ## ボタンとリンク
 
