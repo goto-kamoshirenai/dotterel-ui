@@ -169,8 +169,24 @@
         var(--dotterel-icon-iterations) both;
     }
 
+    /*
+     * ホバーで動くアイコンは、アイコン自体・明示した .dotterel-icon-host・
+     * 操作要素のいずれかにホバーしたときに動く。ボタンやリンクの中に置いた
+     * アイコンへホスト用のクラスを付けて回らずに済む。
+     */
     .dotterel-icon--hover:hover .dotterel-icon__dot,
-    .dotterel-icon-host:hover .dotterel-icon--hover .dotterel-icon__dot {
+    .dotterel-icon-host:hover .dotterel-icon--hover .dotterel-icon__dot,
+    :is(
+        button,
+        a[href],
+        summary,
+        [role="button"],
+        [role="link"],
+        [role="tab"],
+        [role="menuitem"]
+      ):not(:disabled, [aria-disabled="true"]):hover
+      .dotterel-icon--hover
+      .dotterel-icon__dot {
       animation: dotterel-icon-pulse var(--dotterel-icon-duration)
         var(--dotterel-motion-easing) var(--dotterel-dot-delay, 0ms)
         var(--dotterel-icon-iterations) both;

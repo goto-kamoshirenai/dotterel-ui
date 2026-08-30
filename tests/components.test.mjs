@@ -188,3 +188,17 @@ test("the distributed stylesheet contains namespaced tokens and reduced-motion r
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.doesNotMatch(css, /(^|\n)\s*\.btn(?:\s|[{,:])/);
 });
+
+test("hover icons follow the icon, an explicit host, and interactive ancestors", async () => {
+  const css = await readFile(new URL("../dist/styles.css", import.meta.url), "utf8");
+  const rule = css.slice(css.indexOf(".dotterel-icon--hover:hover"));
+  const selector = rule.slice(0, rule.indexOf("{"));
+
+  assert.match(selector, /\.dotterel-icon--hover:hover \.dotterel-icon__dot/);
+  assert.match(selector, /\.dotterel-icon-host:hover \.dotterel-icon--hover/);
+  assert.match(selector, /:not\(:disabled, \[aria-disabled="true"\]\)/);
+
+  for (const host of ["button", "a\\[href\\]", "summary", 'role="button"', 'role="tab"']) {
+    assert.match(selector, new RegExp(host), `${host} is an icon host`);
+  }
+});
