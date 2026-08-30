@@ -2,6 +2,26 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.4.0 - 2026-08-30
+
+### Added
+
+- 一般的なUI操作・状態を表す30種類の登録済みアイコン。
+  書籍と文書 (`book`、`document`、`quote`、`bookmark`、`bookmark-filled`、`tag`)、
+  場所と接続 (`building`、`desktop`、`database`、`network`、`link`、`external-link`、`image-off`)、
+  人と連絡 (`message`、`login`、`logout`)、
+  表示切替 (`grid`、`list`、`more-vertical`)、
+  検索と絞り込み (`filter`、`sort`、`checklist`)、
+  編集 (`edit`、`copy`、`save`、`trash`、`undo`)、
+  移動と再生 (`swap-vertical`、`merge`、`stop`)
+- 追加アイコン名の登録と、全アイコン名がkebab-caseであることを確認するテスト
+
+### Changed
+
+- `timer`、`play`、`home`、`user`、`settings`、`document` などの既存アイコンの
+  ドット行列を調整し、追加分と字面を揃えた
+- READMEに登録済みアイコンの一覧を分類付きで掲載
+
 ## 0.3.0 - 2026-07-29
 
 ### Added
