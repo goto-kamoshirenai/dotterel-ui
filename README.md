@@ -252,6 +252,7 @@ import { DotCount } from "dotterel-ui";
 | `decimal` | `"."` | 小数点の文字 |
 | `prefix` / `suffix` | `""` | 数値の前後に付ける文字 |
 | `font` | `"dot"` | `"inherit"` にすると継承フォントで表示する |
+| `density` | `"comfortable"` | `"compact"` でドットを詰めた書体にする。`font="dot"` のときだけ効く |
 | `label` | なし | 支援技術へ読み上げるラベル |
 | `motion` | `"auto"` | `"auto"`、`"always"`、`"none"` |
 | `onStart` / `onComplete` | なし | 開始時・完了時のコールバック |
@@ -400,6 +401,8 @@ npmへの公開は trusted publishing (OIDC) で行うため、トークンの�
 
 アイコンと同じ正方形ドットで設計した、大文字・数字・基本記号用の表示フォントを同梱しています。`styles.css` を読み込むと `Dotterel Dots` が登録され、進捗率やカウンターへ自動的に使用されます。
 
+ドットを詰めた `Dotterel Dots Compact` も同梱しています。字形は同じで、ドットを太くして隙間を狭めたものです。アイコンの `density="compact"` と同じ詰め方で、並べたときに字面が揃います。
+
 任意の要素へ適用する最短の方法は `DotText` です。収録字形が大文字だけなので、既定で `text-transform: uppercase` が付きます。
 
 ```tsx
@@ -414,10 +417,26 @@ import { DotText } from "dotterel-ui";
 
 `as` は `span` (既定)、`div`、`p`、`strong`、`em`、`code`、`time`、`label`、`figcaption`、`dt`、`dd`、`li`、`h1`〜`h6` を受け付けます。`tabular` を付けると数字が等幅になります。
 
+`density="compact"` でドットを詰めた書体へ切り替えます。`DotCount` も同じ指定を受け付けます。
+
+```tsx
+<DotText density="compact" tabular>2026 SCORE 1200</DotText>
+
+<DotCount to={1200} density="compact" />
+```
+
+| 書体 | ドット | ピッチ | 隙間 | 字幅 (3列) |
+| --- | --- | --- | --- | --- |
+| `Dotterel Dots` | 100 | 200 | 100 | 700 |
+| `Dotterel Dots Compact` | 140 | 190 | 50 | 620 |
+
+単位はどちらも1000 units/em です。5行グリッドと大文字の高さ (900) は共通なので、行の高さとベースラインは変わりません。詰めたぶん字幅は狭くなります。
+
 React を使わない場合は、同じ効果のクラスをそのまま指定できます。
 
 ```html
 <span class="dotterel-text dotterel-text--uppercase dotterel-text--tabular">score 1200</span>
+<span class="dotterel-text dotterel-text--compact">score 1200</span>
 ```
 
 CSSから直接指定する場合は、フォールバックまで含んだ変数を使います。
@@ -427,7 +446,14 @@ CSSから直接指定する場合は、フォールバックまで含んだ変�
   font-family: var(--dotterel-font-family-dot);
   font-synthesis: none;
 }
+
+.status--dense {
+  font-family: var(--dotterel-font-family-dot-compact);
+  font-synthesis: none;
+}
 ```
+
+ドット書体はどちらも400の1ウェイトしかありません。`font-weight` を上げるとブラウザが合成太字でドットを二重に描くため、当てる規則には必ず `font-synthesis: none` を書いてください。
 
 収録文字は `A-Z`、`0-9`、空白、`! "%'()+,-./:;=?[\]_|` です。小文字や未収録記号はフォールバックフォントで表示されます。
 
@@ -440,9 +466,14 @@ const dotterelDots = localFont({
   src: "../node_modules/dotterel-ui/fonts/dotterel-dots.woff2",
   variable: "--font-dotterel-dots",
 });
+
+const dotterelDotsCompact = localFont({
+  src: "../node_modules/dotterel-ui/fonts/dotterel-dots-compact.woff2",
+  variable: "--font-dotterel-dots-compact",
+});
 ```
 
-配布形式は WOFF2、OTF、TTF です。グリフを変更した場合は、次のコマンドで3形式と見本SVGを再生成できます。
+配布形式は WOFF2、OTF、TTF です。グリフや詰め方を変更した場合は、次のコマンドで2書体ぶんの3形式と見本SVGを再生成できます。
 
 ```bash
 pnpm font:generate

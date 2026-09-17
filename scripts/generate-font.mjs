@@ -10,10 +10,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fontDirectory = resolve(projectRoot, "src", "fonts");
 const specimenDirectory = resolve(projectRoot, "specimens");
 
-const FONT_FAMILY = "Dotterel Dots";
 const FONT_SUBFAMILY = "Regular";
-const FONT_FULL_NAME = `${FONT_FAMILY} ${FONT_SUBFAMILY}`;
-const FONT_POSTSCRIPT_NAME = "DotterelDots-Regular";
 const FONT_VERSION = "Version 1.000";
 const COPYRIGHT = "Copyright (c) 2026 dotterel-ui contributors";
 const LICENSE = "Licensed under the MIT License.";
@@ -25,14 +22,60 @@ const UNITS_PER_EM = 1000;
 const ASCENDER = 1000;
 const DESCENDER = -250;
 const CAP_HEIGHT = 900;
-const DOT_SIZE = 100;
-const PITCH = 200;
-const SIDE_BEARING = 100;
-const SPACE_ADVANCE = 400;
+
+/**
+ * 字面はどちらも5行グリッドで、大文字の高さ (CAP_HEIGHT) いっぱいに収まる。
+ * 密度は `dot / pitch` で決まる。regular は 0.5 でアイコンの `comfortable`、
+ * compact は約 0.74 で `compact` と同じ詰め方になる。
+ *
+ * 4 * pitch + dot === CAP_HEIGHT を保つと、どちらの書体も同じ位置に
+ * ベースラインと大文字の上端が来る。字間 (sideBearing) は字の中の隙間と
+ * 同じ値にし、空白の幅は pitch 2つぶんにする。
+ */
+const VARIANTS = [
+  {
+    key: "regular",
+    family: "Dotterel Dots",
+    postScriptName: "DotterelDots-Regular",
+    fileStem: "dotterel-dots",
+    dot: 100,
+    pitch: 200,
+    description: "A square-dot display font designed for dotterel-ui.",
+  },
+  {
+    key: "compact",
+    family: "Dotterel Dots Compact",
+    postScriptName: "DotterelDotsCompact-Regular",
+    fileStem: "dotterel-dots-compact",
+    dot: 140,
+    pitch: 190,
+    description:
+      "A tightly spaced square-dot display font designed for dotterel-ui.",
+  },
+].map((variant) => ({
+  ...variant,
+  fullName: `${variant.family} ${FONT_SUBFAMILY}`,
+  gap: variant.pitch - variant.dot,
+  sideBearing: variant.pitch - variant.dot,
+  spaceAdvance: variant.pitch * 2,
+}));
+
+function assertVariantMetrics() {
+  for (const variant of VARIANTS) {
+    if (variant.pitch * 4 + variant.dot !== CAP_HEIGHT) {
+      throw new Error(
+        `Variant "${variant.key}" does not fill the cap height exactly.`,
+      );
+    }
+    if (variant.gap <= 0) {
+      throw new Error(`Variant "${variant.key}" leaves no gap between dots.`);
+    }
+  }
+}
 
 const glyphs = [
   { name: ".notdef", rows: ["###", "#.#", "#.#", "#.#", "###"] },
-  { char: " ", name: "space", rows: [], advanceWidth: SPACE_ADVANCE },
+  { char: " ", name: "space", rows: [] },
   { char: "!", name: "exclam", rows: ["#", "#", "#", ".", "#"] },
   { char: '"', name: "quotedbl", rows: ["#.#", "#.#", "...", "...", "..."] },
   { char: "%", name: "percent", rows: ["##..#", "##.#.", "..#..", ".#.##", "#..##"] },
@@ -101,6 +144,7 @@ const referenceGlyphs = new Map([
 ]);
 
 function validateGlyphs() {
+  assertVariantMetrics();
   const encoded = new Set();
 
   for (const glyph of glyphs) {
@@ -131,15 +175,15 @@ function validateGlyphs() {
   }
 }
 
-function boundsFor(glyph) {
+function boundsFor(glyph, variant) {
   const points = [];
 
   glyph.rows.forEach((row, rowIndex) => {
     [...row].forEach((cell, columnIndex) => {
       if (cell === "#") {
-        const x = SIDE_BEARING + columnIndex * PITCH;
-        const y = CAP_HEIGHT - DOT_SIZE - rowIndex * PITCH;
-        points.push([x, y], [x + DOT_SIZE, y + DOT_SIZE]);
+        const x = variant.sideBearing + columnIndex * variant.pitch;
+        const y = CAP_HEIGHT - variant.dot - rowIndex * variant.pitch;
+        points.push([x, y], [x + variant.dot, y + variant.dot]);
       }
     });
   });
@@ -156,17 +200,19 @@ function boundsFor(glyph) {
   };
 }
 
-function advanceWidthFor(glyph) {
-  if (glyph.advanceWidth !== undefined) {
-    return glyph.advanceWidth;
+function advanceWidthFor(glyph, variant) {
+  if (glyph.rows.length === 0) {
+    return variant.spaceAdvance;
   }
 
   const columns = glyph.rows[0]?.length ?? 1;
-  return SIDE_BEARING * 2 + DOT_SIZE + Math.max(0, columns - 1) * PITCH;
+  return (
+    variant.sideBearing * 2 + variant.dot + Math.max(0, columns - 1) * variant.pitch
+  );
 }
 
-function ttfGlyphFor(glyph) {
-  const bounds = boundsFor(glyph);
+function ttfGlyphFor(glyph, variant) {
+  const bounds = boundsFor(glyph, variant);
   const contours = [];
 
   glyph.rows.forEach((row, rowIndex) => {
@@ -175,13 +221,13 @@ function ttfGlyphFor(glyph) {
         return;
       }
 
-      const x = SIDE_BEARING + columnIndex * PITCH;
-      const y = CAP_HEIGHT - DOT_SIZE - rowIndex * PITCH;
+      const x = variant.sideBearing + columnIndex * variant.pitch;
+      const y = CAP_HEIGHT - variant.dot - rowIndex * variant.pitch;
       contours.push([
         { x, y, onCurve: true },
-        { x, y: y + DOT_SIZE, onCurve: true },
-        { x: x + DOT_SIZE, y: y + DOT_SIZE, onCurve: true },
-        { x: x + DOT_SIZE, y, onCurve: true },
+        { x, y: y + variant.dot, onCurve: true },
+        { x: x + variant.dot, y: y + variant.dot, onCurve: true },
+        { x: x + variant.dot, y, onCurve: true },
       ]);
     });
   });
@@ -189,18 +235,18 @@ function ttfGlyphFor(glyph) {
   return {
     contours,
     ...bounds,
-    advanceWidth: advanceWidthFor(glyph),
-    leftSideBearing: glyph.rows.length === 0 ? 0 : SIDE_BEARING,
+    advanceWidth: advanceWidthFor(glyph, variant),
+    leftSideBearing: glyph.rows.length === 0 ? 0 : variant.sideBearing,
     name: glyph.name,
     unicode: glyph.char === undefined ? [] : [glyph.char.codePointAt(0)],
   };
 }
 
-function buildTrueTypeFont() {
+function buildTrueTypeFont(variant) {
   const font = createFont();
   font.readEmpty();
   const data = font.get();
-  const ttfGlyphs = glyphs.map(ttfGlyphFor);
+  const ttfGlyphs = glyphs.map((glyph) => ttfGlyphFor(glyph, variant));
   const encodedGlyphs = ttfGlyphs.filter((glyph) => glyph.unicode.length > 0);
   const averageWidth = Math.round(
     encodedGlyphs.reduce((sum, glyph) => sum + glyph.advanceWidth, 0) /
@@ -222,14 +268,14 @@ function buildTrueTypeFont() {
     ),
   );
   data.name = {
-    fontFamily: FONT_FAMILY,
+    fontFamily: variant.family,
     fontSubFamily: FONT_SUBFAMILY,
-    uniqueSubFamily: `1.000;DOTR;${FONT_POSTSCRIPT_NAME}`,
+    uniqueSubFamily: `1.000;DOTR;${variant.postScriptName}`,
     version: FONT_VERSION,
-    postScriptName: FONT_POSTSCRIPT_NAME,
-    fullName: FONT_FULL_NAME,
+    postScriptName: variant.postScriptName,
+    fullName: variant.fullName,
     copyright: COPYRIGHT,
-    description: "A square-dot display font designed for dotterel-ui.",
+    description: variant.description,
     license: LICENSE,
     licenseURL: LICENSE_URL,
   };
@@ -240,12 +286,12 @@ function buildTrueTypeFont() {
     ...ttfGlyphs.map((glyph) => glyph.advanceWidth),
   );
   data.hhea.minLeftSideBearing = 0;
-  data.hhea.minRightSideBearing = SIDE_BEARING;
+  data.hhea.minRightSideBearing = variant.sideBearing;
   data.hhea.xMaxExtent = Math.max(...ttfGlyphs.map((glyph) => glyph.xMax));
   data.hhea.numOfLongHorMetrics = ttfGlyphs.length;
   data.post.italicAngle = 0;
   data.post.underlinePosition = -175;
-  data.post.underlineThickness = DOT_SIZE;
+  data.post.underlineThickness = variant.dot;
   data.post.isFixedPitch = 0;
   data.maxp.numGlyphs = ttfGlyphs.length;
   data["OS/2"].xAvgCharWidth = averageWidth;
@@ -271,7 +317,7 @@ function buildTrueTypeFont() {
   return font;
 }
 
-function openTypePathFor(glyph) {
+function openTypePathFor(glyph, variant) {
   const path = new opentype.Path();
 
   glyph.rows.forEach((row, rowIndex) => {
@@ -280,12 +326,12 @@ function openTypePathFor(glyph) {
         return;
       }
 
-      const x = SIDE_BEARING + columnIndex * PITCH;
-      const y = CAP_HEIGHT - DOT_SIZE - rowIndex * PITCH;
+      const x = variant.sideBearing + columnIndex * variant.pitch;
+      const y = CAP_HEIGHT - variant.dot - rowIndex * variant.pitch;
       path.moveTo(x, y);
-      path.lineTo(x, y + DOT_SIZE);
-      path.lineTo(x + DOT_SIZE, y + DOT_SIZE);
-      path.lineTo(x + DOT_SIZE, y);
+      path.lineTo(x, y + variant.dot);
+      path.lineTo(x + variant.dot, y + variant.dot);
+      path.lineTo(x + variant.dot, y);
       path.close();
     });
   });
@@ -293,26 +339,26 @@ function openTypePathFor(glyph) {
   return path;
 }
 
-function buildOpenTypeFont() {
+function buildOpenTypeFont(variant) {
   const openTypeGlyphs = glyphs.map(
     (glyph) =>
       new opentype.Glyph({
         name: glyph.name,
         unicode: glyph.char?.codePointAt(0),
-        advanceWidth: advanceWidthFor(glyph),
-        path: openTypePathFor(glyph),
+        advanceWidth: advanceWidthFor(glyph, variant),
+        path: openTypePathFor(glyph, variant),
       }),
   );
 
   return new opentype.Font({
-    familyName: FONT_FAMILY,
+    familyName: variant.family,
     styleName: FONT_SUBFAMILY,
-    fullName: FONT_FULL_NAME,
-    postScriptName: FONT_POSTSCRIPT_NAME,
+    fullName: variant.fullName,
+    postScriptName: variant.postScriptName,
     version: FONT_VERSION,
     manufacturer: "dotterel-ui contributors",
     designer: "dotterel-ui contributors",
-    description: "A square-dot display font designed for dotterel-ui.",
+    description: variant.description,
     copyright: COPYRIGHT,
     license: LICENSE,
     licenseURL: LICENSE_URL,
@@ -352,14 +398,14 @@ function xmlEscape(value) {
     .replaceAll('"', "&quot;");
 }
 
-function svgDotText(text, x, y, scale, color = "#181818") {
+function svgDotText(variant, text, x, y, scale, color = "#181818") {
   let cursor = x;
   const rectangles = [];
 
   for (const character of text) {
     const glyph = glyphs.find((candidate) => candidate.char === character);
     if (!glyph) {
-      cursor += SPACE_ADVANCE * scale;
+      cursor += variant.spaceAdvance * scale;
       continue;
     }
 
@@ -367,21 +413,33 @@ function svgDotText(text, x, y, scale, color = "#181818") {
       [...row].forEach((cell, columnIndex) => {
         if (cell === "#") {
           rectangles.push(
-            `<rect x="${cursor + (SIDE_BEARING + columnIndex * PITCH) * scale}" ` +
-              `y="${y + rowIndex * PITCH * scale}" width="${DOT_SIZE * scale}" ` +
-              `height="${DOT_SIZE * scale}" fill="${color}"/>`,
+            `<rect x="${cursor + (variant.sideBearing + columnIndex * variant.pitch) * scale}" ` +
+              `y="${y + rowIndex * variant.pitch * scale}" width="${variant.dot * scale}" ` +
+              `height="${variant.dot * scale}" fill="${color}"/>`,
           );
         }
       });
     });
 
-    cursor += advanceWidthFor(glyph) * scale;
+    cursor += advanceWidthFor(glyph, variant) * scale;
   }
 
   return rectangles.join("");
 }
 
-function buildSpecimenSvg() {
+/** 見本の見出しが枠からはみ出さないよう、指定幅に収まる倍率を出す */
+function scaleToFit(variant, text, width) {
+  const units = [...text].reduce((total, character) => {
+    const glyph = glyphs.find((candidate) => candidate.char === character);
+    return total + (glyph ? advanceWidthFor(glyph, variant) : variant.spaceAdvance);
+  }, 0);
+
+  return units === 0 ? 0 : width / units;
+}
+
+function buildSpecimenSvg(variant) {
+  const title = variant.family.toUpperCase();
+  const titleScale = Math.min(0.125, scaleToFit(variant, title, 1400));
   const symbolLine = `! " % ' ( ) + , - . / : ; = ? [ \\ ] _ |`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -389,17 +447,17 @@ function buildSpecimenSvg() {
   <rect width="1600" height="1180" fill="#f4f1e8"/>
   <rect x="56" y="56" width="1488" height="1068" fill="none" stroke="#181818" stroke-width="2"/>
   <text x="92" y="116" fill="#705f4b" font-family="Arial, sans-serif" font-size="22" letter-spacing="4">DOTTEREL-UI / ORIGINAL DISPLAY TYPEFACE</text>
-  ${svgDotText("DOTTEREL DOTS", 80, 158, 0.125)}
+  ${svgDotText(variant, title, 80, 158, titleScale)}
   <line x1="80" y1="300" x2="1520" y2="300" stroke="#181818" stroke-width="2"/>
-  <text x="82" y="356" fill="#705f4b" font-family="Arial, sans-serif" font-size="20" letter-spacing="3">UPPERCASE / VARIABLE WIDTH / 5 ROW GRID</text>
-  ${svgDotText("ABCDEFGHIJKLM", 76, 396, 0.073)}
-  ${svgDotText("NOPQRSTUVWXYZ", 76, 500, 0.073)}
+  <text x="82" y="356" fill="#705f4b" font-family="Arial, sans-serif" font-size="20" letter-spacing="3">UPPERCASE / VARIABLE WIDTH / 5 ROW GRID / DOT ${variant.dot} GAP ${variant.gap}</text>
+  ${svgDotText(variant, "ABCDEFGHIJKLM", 76, 396, 0.073)}
+  ${svgDotText(variant, "NOPQRSTUVWXYZ", 76, 500, 0.073)}
   <text x="82" y="646" fill="#705f4b" font-family="Arial, sans-serif" font-size="20" letter-spacing="3">NUMERALS</text>
-  ${svgDotText("0123456789", 76, 682, 0.095)}
+  ${svgDotText(variant, "0123456789", 76, 682, 0.095)}
   <text x="82" y="826" fill="#705f4b" font-family="Arial, sans-serif" font-size="20" letter-spacing="3">SYMBOLS</text>
-  ${svgDotText(symbolLine, 76, 858, 0.055)}
+  ${svgDotText(variant, symbolLine, 76, 858, 0.055)}
   <rect x="80" y="988" width="1440" height="92" fill="#181818"/>
-  ${svgDotText("[STATUS] = 42%", 104, 1002, 0.065, "#f4f1e8")}
+  ${svgDotText(variant, "[STATUS] = 42%", 104, 1002, 0.065, "#f4f1e8")}
   <text x="1468" y="1100" text-anchor="end" fill="#705f4b" font-family="Arial, sans-serif" font-size="18">${xmlEscape(FONT_VERSION)}</text>
 </svg>
 `;
@@ -410,24 +468,27 @@ await Promise.all([
   mkdir(fontDirectory, { recursive: true }),
   mkdir(specimenDirectory, { recursive: true }),
 ]);
-
-const trueTypeFont = buildTrueTypeFont();
-const ttfBuffer = trueTypeFont.write({ type: "ttf", toBuffer: true });
 await woff2.init();
-const woff2Buffer = Buffer.from(woff2.encode(ttfBuffer));
-const openTypeBuffer = serializeOpenTypeFont(buildOpenTypeFont());
 
-await Promise.all([
-  writeFile(resolve(fontDirectory, "dotterel-dots.ttf"), ttfBuffer),
-  writeFile(resolve(fontDirectory, "dotterel-dots.woff2"), woff2Buffer),
-  writeFile(resolve(fontDirectory, "dotterel-dots.otf"), openTypeBuffer),
-  writeFile(
-    resolve(specimenDirectory, "dotterel-dots-specimen.svg"),
-    buildSpecimenSvg(),
-    "utf8",
-  ),
-]);
+for (const variant of VARIANTS) {
+  const ttfBuffer = buildTrueTypeFont(variant).write({ type: "ttf", toBuffer: true });
+  const woff2Buffer = Buffer.from(woff2.encode(ttfBuffer));
+  const openTypeBuffer = serializeOpenTypeFont(buildOpenTypeFont(variant));
+
+  await Promise.all([
+    writeFile(resolve(fontDirectory, `${variant.fileStem}.ttf`), ttfBuffer),
+    writeFile(resolve(fontDirectory, `${variant.fileStem}.woff2`), woff2Buffer),
+    writeFile(resolve(fontDirectory, `${variant.fileStem}.otf`), openTypeBuffer),
+    writeFile(
+      resolve(specimenDirectory, `${variant.fileStem}-specimen.svg`),
+      buildSpecimenSvg(variant),
+      "utf8",
+    ),
+  ]);
+}
 
 console.log(
-  `Generated ${glyphs.length - 1} encoded glyphs in TTF, OTF, and WOFF2 formats.`,
+  `Generated ${glyphs.length - 1} encoded glyphs for ${VARIANTS.length} variants ` +
+    `(${VARIANTS.map((variant) => variant.family).join(", ")}) ` +
+    "in TTF, OTF, and WOFF2 formats.",
 );

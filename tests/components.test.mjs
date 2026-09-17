@@ -186,6 +186,26 @@ test("dot text applies the bundled display font to any element", () => {
   assert.equal(inline, '<span class="dotterel-text note">Mixed Case</span>');
 });
 
+test("compact density swaps in the tightly spaced display font", () => {
+  const text = renderToStaticMarkup(
+    createElement(DotText, { density: "compact", transform: "none" }, "Level"),
+  );
+  const counter = renderToStaticMarkup(
+    createElement(DotCount, { to: 120, density: "compact", motion: "none" }),
+  );
+  const inherited = renderToStaticMarkup(
+    createElement(DotCount, { to: 120, density: "compact", font: "inherit", motion: "none" }),
+  );
+
+  assert.equal(text, '<span class="dotterel-text dotterel-text--compact">Level</span>');
+  assert.match(
+    counter,
+    /^<span class="dotterel-count dotterel-text dotterel-text--tabular dotterel-text--compact"/,
+  );
+  // 書体を継承する指定のときは、詰めた書体も当てない
+  assert.doesNotMatch(inherited, /dotterel-text/);
+});
+
 test("dot field is a decorative SSR-safe canvas layer", () => {
   const html = renderToStaticMarkup(
     createElement(DotField, {
