@@ -82,6 +82,10 @@ export const ICON_METADATA = {
   building: { category: "place", keywords: ["出版社", "会社", "組織", "company"] },
   desktop: { category: "place", keywords: ["PC", "画面", "デスクトップ", "monitor"] },
   database: { category: "place", keywords: ["データベース", "蓄積", "db"] },
+  "database-detailed": {
+    category: "place",
+    keywords: ["データベース", "蓄積", "db", "9x9", "詳細"],
+  },
   network: { category: "place", keywords: ["ネットワーク", "引用関係", "オンライン", "graph"] },
   link: { category: "place", keywords: ["リンク", "接続", "アフィリエイト", "chain"] },
   "external-link": { category: "place", keywords: ["外部リンク", "別タブ", "external"] },
