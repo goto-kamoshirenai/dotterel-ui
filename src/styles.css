@@ -215,9 +215,28 @@
     }
   }
 
+  /*
+   * リップルを載せる面の共通設定。DotButton はこれを内蔵しているが、
+   * useDotRipple で別の面へ載せるときはホストへこのクラスを付ける。
+   * マスは端数のぶん外へはみ出すので、縁で切り取って下地の帯を残さない。
+   */
+  .dotterel-ripple-host {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    --dotterel-ripple-fill: var(--dotterel-color-border-subtle);
+    /* 押したときはホバー色をもう1段進めた色で明滅させる。文字色は明暗どちらの
+       テーマでも一番コントラストの高い色なので、そちらへ寄せると同じ向きへ強まる */
+    --dotterel-ripple-press-fill: color-mix(
+      in oklab,
+      var(--dotterel-ripple-fill) 80%,
+      var(--dotterel-color-text)
+    );
+  }
+
   .dotterel-button {
     --dotterel-button-base: var(--dotterel-color-surface);
-    --dotterel-button-hover: var(--dotterel-color-border-subtle);
+    --dotterel-ripple-fill: var(--dotterel-color-border-subtle);
 
     position: relative;
     isolation: isolate;
@@ -255,7 +274,7 @@
 
   .dotterel-button--primary {
     --dotterel-button-base: var(--dotterel-color-accent);
-    --dotterel-button-hover: color-mix(
+    --dotterel-ripple-fill: color-mix(
       in oklab,
       var(--dotterel-color-accent-emphasis) 60%,
       var(--dotterel-color-text)
@@ -283,7 +302,7 @@
   }
 
   .dotterel-button--danger {
-    --dotterel-button-hover: var(--dotterel-color-danger-surface);
+    --dotterel-ripple-fill: var(--dotterel-color-danger-surface);
 
     border-color: var(--dotterel-color-danger-border);
     color: var(--dotterel-color-danger);
@@ -304,60 +323,60 @@
     cursor: progress;
   }
 
-  .dotterel-button__ripple {
+  /*
+   * リップルは面をマス目で覆い、1マスずつ塗り替える。
+   * - マスの間に余白は置かない。余白があるとドットが下地の上に乗って見え、
+   *   面そのものが塗り替わったようには見えない
+   * - 余白なしで同心円状に広げると縁が円に見えるので、1マスごとの遅れに
+   *   ばらつき (--dotterel-ripple-jitter) を混ぜて点く順番を崩す
+   */
+  .dotterel-ripple {
     position: absolute;
     z-index: 0;
     top: 50%;
     left: 50%;
-    width: 100%;
-    width: round(down, 100%, var(--dotterel-ripple-pitch));
-    height: 100%;
-    height: round(down, 100%, var(--dotterel-ripple-pitch));
-    overflow: hidden;
+    display: grid;
+    grid-template-columns: repeat(var(--dotterel-ripple-columns), var(--dotterel-ripple-cell));
+    grid-auto-rows: var(--dotterel-ripple-cell);
     translate: -50% -50%;
     pointer-events: none;
-    mask-image: var(--dotterel-ripple-mask);
-    mask-repeat: repeat;
-    mask-size: var(--dotterel-ripple-pitch) var(--dotterel-ripple-pitch);
-    -webkit-mask-image: var(--dotterel-ripple-mask);
-    -webkit-mask-repeat: repeat;
-    -webkit-mask-size: var(--dotterel-ripple-pitch) var(--dotterel-ripple-pitch);
   }
 
-  .dotterel-button__hover {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: var(--dotterel-ripple-cover);
-    height: var(--dotterel-ripple-cover);
-    margin: calc(var(--dotterel-ripple-cover) / -2) 0 0
-      calc(var(--dotterel-ripple-cover) / -2);
-    border-radius: 50%;
-    background: var(--dotterel-button-hover);
-    scale: 0;
-    transition: scale var(--dotterel-motion-base) var(--dotterel-motion-easing);
-  }
-
-  .dotterel-button:hover .dotterel-button__hover,
-  .dotterel-button:focus-visible .dotterel-button__hover {
-    scale: 1;
-  }
-
-  .dotterel-button__wave {
-    position: absolute;
-    top: var(--dotterel-ripple-y);
-    left: var(--dotterel-ripple-x);
-    width: var(--dotterel-ripple-size);
-    height: var(--dotterel-ripple-size);
-    margin: calc(var(--dotterel-ripple-size) / -2) 0 0
-      calc(var(--dotterel-ripple-size) / -2);
-    border-radius: 50%;
-    background: currentColor;
+  .dotterel-ripple__cell {
+    background-color: var(--dotterel-ripple-fill);
     opacity: 0;
-    scale: 0;
+    transition-property: opacity;
+    transition-duration: var(--dotterel-ripple-cell-duration);
+    transition-timing-function: linear;
+    /* 離脱時は外側から消える (点いた順の逆) */
+    transition-delay: calc(
+      (var(--dotterel-ripple-ring-span) - var(--dotterel-ripple-ring)) *
+        var(--dotterel-ripple-step) + var(--dotterel-ripple-jitter)
+    );
   }
 
-  .dotterel-button__label {
+  /* ホバーでベース色は変えない。色の移行はマスの塗りが受け持つ
+     (面全体が同時に変わると、広がる形が見えなくなる) */
+  .dotterel-ripple-host:not(:disabled, [aria-disabled="true"]):hover .dotterel-ripple__cell,
+  .dotterel-ripple-host:not(:disabled, [aria-disabled="true"]):focus-visible
+    .dotterel-ripple__cell {
+    opacity: 1;
+    transition-delay: calc(
+      var(--dotterel-ripple-ring) * var(--dotterel-ripple-step) + var(--dotterel-ripple-jitter)
+    );
+  }
+
+  /* 形は既定で四角。余白が無いので、四角のときだけ面がすき間なく塗り替わる */
+  .dotterel-ripple--circle .dotterel-ripple__cell {
+    border-radius: 50%;
+  }
+
+  .dotterel-ripple--diamond .dotterel-ripple__cell {
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+
+  .dotterel-button__label,
+  .dotterel-ripple-label {
     position: relative;
     z-index: 1;
     display: inline-flex;
@@ -365,32 +384,34 @@
     gap: var(--dotterel-space-2);
   }
 
+  /* ホバーの手がかりは残し、広がる動き (遅れ) だけを省く */
   @media (prefers-reduced-motion: reduce) {
-    .dotterel-button__hover {
+    .dotterel-ripple__cell {
       transition: none;
     }
   }
 
+  /* 押したとき: 押したマスから外へ1マスずつ明滅する */
   @media (prefers-reduced-motion: no-preference) {
-    .dotterel-button__wave {
-      animation: dotterel-ripple-wave var(--dotterel-ripple-duration)
-        var(--dotterel-motion-easing) both;
+    .dotterel-ripple[data-press] .dotterel-ripple__cell {
+      animation-name: dotterel-ripple-press;
+      animation-duration: var(--dotterel-ripple-press-duration);
+      animation-timing-function: linear;
+      animation-delay: calc(
+        hypot(
+            var(--dotterel-ripple-cx) - var(--dotterel-ripple-press-x),
+            var(--dotterel-ripple-cy) - var(--dotterel-ripple-press-y)
+          ) *
+          var(--dotterel-ripple-step) + var(--dotterel-ripple-jitter)
+      );
     }
   }
 
-  @keyframes dotterel-ripple-wave {
-    from {
-      opacity: var(--dotterel-ripple-opacity);
-      scale: 0;
-    }
-
-    55% {
-      opacity: var(--dotterel-ripple-opacity);
-    }
-
-    to {
-      opacity: 0;
-      scale: 1;
+  /* 0%/100%を書かないことで、そのときの値 (ホバー中なら点灯) から明滅して戻る */
+  @keyframes dotterel-ripple-press {
+    50% {
+      opacity: 1;
+      background-color: var(--dotterel-ripple-press-fill);
     }
   }
 
@@ -503,7 +524,7 @@
       border-color: ButtonText;
     }
 
-    .dotterel-button__ripple {
+    .dotterel-ripple {
       display: none;
     }
 
