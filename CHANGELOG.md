@@ -2,6 +2,26 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.6.0 - 2026-09-17
+
+### Added
+
+- ドットを詰めた同梱フォント `Dotterel Dots Compact` (WOFF2 / OTF / TTF)。
+  字形は `Dotterel Dots` と同じ5行グリッドで、ドットを 100 から 140 へ太らせ、
+  ピッチを 200 から 190 へ詰めた (隙間 100 → 50)。大文字の高さとベースラインは
+  共通なので行の高さは変わらず、字幅だけ狭くなる
+- `styles.css` からの `@font-face` 登録と、フォールバックまで含んだ
+  `--dotterel-font-family-dot-compact`
+- `DotText` と `DotCount` の `density`。`compact` で詰めた書体へ切り替える。
+  Reactを使わない場合のための `.dotterel-text--compact` も同じ効果になる
+- 詰めた書体の見本 `specimens/dotterel-dots-compact-specimen.svg`
+
+### Changed
+
+- `pnpm font:generate` が2書体ぶんを生成する。ドットとピッチは書体ごとの
+  設定にまとめ、`4 * ピッチ + ドット === 大文字の高さ` を生成時に検査する。
+  `Dotterel Dots` の生成物は変わらない
+
 ## 0.5.0 - 2026-09-17
 
 ### Added

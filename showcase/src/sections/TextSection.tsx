@@ -12,6 +12,8 @@ export function TextSection() {
         <p className="section__lead">
           同梱フォント <strong>Dotterel Dots</strong> は大文字、数字、基本記号だけを持ちます。収録外の文字は{" "}
           <code>--dotterel-font-family-dot</code> の後続フォントが受けます。
+          ドットを詰めた <strong>Dotterel Dots Compact</strong> も同梱しており、
+          <code>density="compact"</code> で切り替えます。
         </p>
       </header>
 
@@ -48,6 +50,22 @@ export function TextSection() {
             </DotText>
             <DotText tabular className="metric">
               0,000,000
+            </DotText>
+          </div>
+        </DemoFrame>
+
+        <DemoFrame
+          title="ドットを詰める"
+          description="density='compact' は隙間を詰めた同じ字形の書体へ切り替えます。行の高さは変わりません。"
+          code={`<DotText tabular>2026 SCORE 1200</DotText>
+<DotText tabular density="compact">2026 SCORE 1200</DotText>`}
+        >
+          <div className="stack">
+            <DotText tabular className="metric">
+              2026 SCORE 1200
+            </DotText>
+            <DotText tabular density="compact" className="metric">
+              2026 SCORE 1200
             </DotText>
           </div>
         </DemoFrame>
