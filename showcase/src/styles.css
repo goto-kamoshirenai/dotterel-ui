@@ -365,6 +365,26 @@ a {
   color: var(--dotterel-color-text-muted);
 }
 
+/* ---- subsections ---- */
+.subsection {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--dotterel-color-border-subtle);
+}
+
+.subsection__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.subsection__lead {
+  margin: 0;
+  max-width: 76ch;
+  color: var(--dotterel-color-text-muted);
+  font-size: 14px;
+}
+
 /* ---- demos ---- */
 .demo-grid {
   display: grid;

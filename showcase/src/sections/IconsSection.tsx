@@ -12,6 +12,7 @@ import {
 import { ICON_NAMES, Icon, type IconAnimationTrigger, type IconName } from "dotterel-ui/icon";
 
 import { CATEGORY_LABELS, ICON_METADATA } from "../catalog/icon-metadata";
+import { IconApiDemos } from "../components/IconApiDemos";
 import { IconCard, type IconDisplay } from "../components/IconCard";
 
 const ANIMATIONS: readonly (IconAnimationTrigger | "none")[] = [
@@ -185,6 +186,8 @@ export function IconsSection() {
           ))}
         </ul>
       )}
+
+      <IconApiDemos />
     </section>
   );
 }
