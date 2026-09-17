@@ -1,0 +1,116 @@
+name: Showcase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "showcase/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - ".github/workflows/showcase.yml"
+  pull_request:
+    paths:
+      - "src/**"
+      - "showcase/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - ".github/workflows/showcase.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同じブランチの実行が重なったら新しい方を優先する。公開中のものは止めない
+concurrency:
+  group: showcase-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ライブラリ本体の pnpm check は ci.yml が毎回走らせる。
+      # ここでは showcase 固有の検査とブラウザテストだけを担当する
+      - name: Check showcase
+        run: pnpm showcase:check
+
+      - name: Install Playwright browsers
+        run: pnpm --dir showcase exec playwright install --with-deps chromium
+
+      - name: Run browser tests
+        run: pnpm showcase:test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: showcase/playwright-report
+          retention-days: 7
+
+  build:
+    needs: verify
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # GitHub Project Pages はリポジトリ名の下に置かれる
+      - name: Build showcase
+        run: pnpm showcase:build
+        env:
+          SHOWCASE_BASE: /${{ github.event.repository.name }}/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: showcase/dist
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

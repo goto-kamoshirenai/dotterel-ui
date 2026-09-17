@@ -1,6 +1,6 @@
 {
   "name": "dotterel-ui",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A lightweight, customizable React UI library built from dots.",
   "license": "MIT",
   "author": "goto-kamoshirenai",
@@ -92,9 +92,15 @@
   },
   "scripts": {
     "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test:built && pnpm pack --dry-run",
+    "check": "pnpm check:lib && pnpm showcase:check",
+    "check:lib": "pnpm lint && pnpm typecheck && pnpm build && pnpm test:built && pnpm pack --dry-run",
     "font:generate": "node scripts/generate-font.mjs",
     "lint": "eslint .",
+    "showcase:build": "pnpm --dir showcase build",
+    "showcase:check": "pnpm --dir showcase check",
+    "showcase:dev": "pnpm --dir showcase dev",
+    "showcase:test": "pnpm --dir showcase test",
+    "showcase:test:e2e": "pnpm --dir showcase test:e2e",
     "test": "pnpm build && pnpm test:built",
     "test:built": "node --test",
     "typecheck": "tsc --noEmit"
