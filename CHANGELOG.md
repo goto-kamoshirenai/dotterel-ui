@@ -2,6 +2,34 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.7.0 - 2026-09-17
+
+### Changed
+
+- ボタンのリップルを、面をマス目で覆って1マスずつ塗り替える方式へ変えた。
+  ホバーは中心から外へ広がり、離れると外側から戻る。押すと押した位置から
+  外へ1マスずつ明滅する。マスの間に余白を置かず、点く順番にばらつきを
+  混ぜるので、面が塗り替わりながらドットが立って見える。
+  これまでのマスク越しに円を広げる方式は、ドットが下地の上に乗って見え、
+  面そのものが塗り替わったようには見えなかった
+- `ripple` の `duration` は押したときの明滅時間 (ms) になり、既定は 260。
+  `opacity` は無くなった。`size` に `xl` (20px) が増えた。
+  `sm` / `md` / `lg` は 8 / 10 / 14px のマスになる
+- ホバー色の変数を `--dotterel-button-hover` から `--dotterel-ripple-fill` へ
+  改めた。押したときの色 `--dotterel-ripple-press-fill` を追加
+- `dotterel-ui/core` のリップル関数を入れ替えた。`rippleOrigin`、`rippleDiameter`、
+  `coverDiameter`、`ripplePitch`、`dotTileMask`、`resolveRippleOpacity`、
+  `RIPPLE_METRICS`、`DEFAULT_RIPPLE_OPACITY` を削り、`rippleGrid`、`pressOrigin`、
+  `cellJitter`、`ringFrom`、`sweepDuration`、`RIPPLE_CELL_SIZES`、
+  `MAX_RIPPLE_CELLS` などを公開する
+
+### Added
+
+- `useDotRipple` を `dotterel-ui/button` から公開。ボタン以外の面 (ナビゲーションの
+  項目、サイドシートなど) へ同じ演出を載せられる。ホストへ `dotterel-ripple-host`、
+  本文へ `dotterel-ripple-label` を付ける。`hasCells` と `sweepMs` を返し、
+  `media` でマスを作る条件を絞れる
+
 ## 0.6.0 - 2026-09-17
 
 ### Added

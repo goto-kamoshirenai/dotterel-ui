@@ -6,29 +6,30 @@ import {
   DEFAULT_PROGRESS_DOT_COUNT,
   DEFAULT_RIPPLE_DOT_SIZE,
   DEFAULT_RIPPLE_DURATION,
+  DEFAULT_RIPPLE_JITTER,
+  MAX_RIPPLE_CELLS,
   DOT_DENSITIES,
   DOT_DENSITY_METRICS,
   DOT_METRICS,
   DOT_SHAPES,
   DOT_SIZES,
   PROGRESS_DOT_COUNTS,
+  RIPPLE_CELL_SIZES,
   RIPPLE_DOT_SIZES,
-  RIPPLE_METRICS,
-  coverDiameter,
+  cellJitter,
   diamondPoints,
   dotGeometry,
-  dotTileMask,
   dotUnitCount,
   filledDots,
   formatPercent,
   percentOf,
+  pressOrigin,
   ratioOf,
   resolveRippleDuration,
-  resolveRippleOpacity,
+  ringFrom,
   ringIndex,
-  rippleDiameter,
-  rippleOrigin,
-  ripplePitch,
+  rippleGrid,
+  sweepDuration,
 } from "../dist/core/index.js";
 import {
   DEFAULT_ICON_ANIMATION,
@@ -298,41 +299,82 @@ test("progress calculations preserve meaningful endpoints", () => {
   assert.equal(dotUnitCount(0), 1);
 });
 
-test("ripple geometry covers its host and clamps origins", () => {
-  assert.deepEqual(rippleOrigin(100, 40, 30, 10), { x: 30, y: 10 });
-  assert.deepEqual(rippleOrigin(100, 40, -20, 90), { x: 0, y: 40 });
-  assert.deepEqual(rippleOrigin(100, 40, Number.NaN, Number.NaN), { x: 50, y: 20 });
-  assert.deepEqual(rippleOrigin(Number.NaN, -10, Number.NaN, Number.NaN), { x: 0, y: 0 });
+test("ripple grid covers its host edge to edge without gaps", () => {
+  const grid = rippleGrid(247, 44, "md");
+  const cell = RIPPLE_CELL_SIZES.md;
 
-  assert.equal(rippleDiameter(100, 40, { x: 50, y: 20 }), 108);
-  assert.equal(
-    rippleDiameter(100, 40, { x: 0, y: 0 }),
-    Math.ceil(Math.hypot(100, 40) * 2),
-  );
-  assert.equal(rippleDiameter(Number.NaN, 40, { x: 0, y: 0 }), 0);
-  assert.equal(coverDiameter(240, 36), Math.ceil(Math.hypot(120, 18) * 2));
-});
+  // 端数は外へはみ出させる (内側へ縮めると縁に下地の帯が残る)
+  assert.equal(grid.cell, cell);
+  assert.equal(grid.columns, Math.ceil(247 / cell));
+  assert.equal(grid.rows, Math.ceil(44 / cell));
+  assert.ok(grid.columns * cell >= 247 && grid.rows * cell >= 44);
+  assert.equal(grid.cells.length, grid.columns * grid.rows);
 
-test("ripple options and masks resolve to bounded, shape-specific values", () => {
-  assert.equal(resolveRippleDuration(), DEFAULT_RIPPLE_DURATION);
-  assert.equal(resolveRippleDuration(900.9), 900);
-  assert.equal(resolveRippleDuration(0), DEFAULT_RIPPLE_DURATION);
-  assert.equal(resolveRippleOpacity(), 0.5);
-  assert.equal(resolveRippleOpacity(-2), 0);
-  assert.equal(resolveRippleOpacity(2), 1);
-
+  // マスは整数の正方形。刻み = 辺 (余白なし)
+  for (const size of RIPPLE_DOT_SIZES) {
+    const side = RIPPLE_CELL_SIZES[size];
+    assert.ok(Number.isInteger(side) && side > 0, `${size} cell side`);
+  }
+  const sides = RIPPLE_DOT_SIZES.map((size) => RIPPLE_CELL_SIZES[size]);
+  assert.deepEqual(sides, [...sides].sort((a, b) => a - b));
   assert.ok(RIPPLE_DOT_SIZES.includes(DEFAULT_RIPPLE_DOT_SIZE));
 
-  for (const size of RIPPLE_DOT_SIZES) {
-    const { dot, gap } = RIPPLE_METRICS[size];
-    assert.equal(ripplePitch(size), dot + gap);
+  // 寸法が取れないときと、大きすぎるときはマスを作らない
+  for (const [w, h] of [[0, 44], [247, 0], [Number.NaN, 44], [-10, 44]]) {
+    assert.deepEqual(rippleGrid(w, h, "md").cells, [], `${w}x${h}`);
+  }
+  assert.deepEqual(rippleGrid(4000, 4000, "sm").cells, []);
+  assert.ok(Math.ceil(4000 / RIPPLE_CELL_SIZES.sm) ** 2 > MAX_RIPPLE_CELLS);
+});
+
+test("ripple rings grow from the center and jitter is deterministic", () => {
+  const grid = rippleGrid(50, 50, "sm"); // 8pxマスで 7x7、中心は (3,3)
+  const ringAt = (x, y) => grid.cells.find((cell) => cell.x === x && cell.y === y)?.ring;
+
+  assert.equal(grid.columns, 7);
+  assert.equal(ringAt(3, 3), 0);
+  assert.equal(ringAt(3, 2), 1);
+  assert.equal(ringAt(0, 0), ringAt(6, 6));
+  assert.equal(grid.ringSpan, ringFrom(0, 0, 3, 3));
+  for (const cell of grid.cells) {
+    assert.ok(cell.ring <= grid.ringSpan + 1e-9);
   }
 
-  const masks = DOT_SHAPES.map((shape) => dotTileMask(shape, "sm"));
-  assert.equal(new Set(masks).size, DOT_SHAPES.length);
-
-  for (const mask of masks) {
-    assert.match(mask, /^url\("data:image\/svg\+xml,/);
-    assert.ok(decodeURIComponent(mask).includes('viewBox="0 0 6 6"'));
+  // 同じ位置なら常に同じ値 (SSRとクライアントで揺れない)、幅の中に収まる
+  assert.equal(cellJitter(3, 4, 110), cellJitter(3, 4, 110));
+  for (let x = 0; x < 12; x += 1) {
+    for (let y = 0; y < 6; y += 1) {
+      const value = cellJitter(x, y, 110);
+      assert.ok(Number.isInteger(value) && value >= 0 && value <= 110, `${x},${y}`);
+    }
   }
+  // 行や列で同じ模様が繰り返さない
+  assert.notEqual(cellJitter(0, 1, 110), cellJitter(1, 0, 110));
+  const row = Array.from({ length: 12 }, (_, x) => cellJitter(x, 0, 110));
+  assert.ok(new Set(row).size >= 8);
+  assert.equal(cellJitter(3, 4, 0), 0);
+  assert.equal(cellJitter(3, 4, Number.NaN), 0);
+  assert.ok(DEFAULT_RIPPLE_JITTER > 0, "既定でばらつきが無いと縁が円に見える");
+});
+
+test("press origin, sweep time, and duration fall back safely", () => {
+  const grid = rippleGrid(50, 50, "sm"); // 8pxマスで 7x7
+
+  // マスの中心を基準にするので、左上の角は0番のマス
+  assert.deepEqual(pressOrigin(grid, 4, 4), { x: 0, y: 0 });
+  assert.deepEqual(pressOrigin(grid, 28, 28), { x: 3, y: 3 });
+  // はみ出した先は端のマスへ寄せ、座標なし (キーボード) は中心へ
+  assert.deepEqual(pressOrigin(grid, 999, -999), { x: 6, y: 0 });
+  assert.deepEqual(pressOrigin(grid, Number.NaN, Number.NaN), { x: 3, y: 3 });
+
+  // 1列ずつ遅らせ、最後の列が切り替わりきるまで (ばらつきの幅も足す)
+  assert.equal(sweepDuration(16, 22, 55, 120), 15 * 22 + 55 + 120);
+  assert.equal(sweepDuration(0, 22, 55, 120), 175);
+  assert.equal(sweepDuration(Number.NaN, 22, 55, 120), 175);
+  assert.ok(sweepDuration(20) > sweepDuration(10));
+
+  assert.equal(resolveRippleDuration(), DEFAULT_RIPPLE_DURATION);
+  assert.equal(resolveRippleDuration(400.9), 400);
+  assert.equal(resolveRippleDuration(0), DEFAULT_RIPPLE_DURATION);
+  assert.equal(resolveRippleDuration(Number.POSITIVE_INFINITY), DEFAULT_RIPPLE_DURATION);
 });
