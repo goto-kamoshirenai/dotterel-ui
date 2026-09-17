@@ -101,16 +101,20 @@ test("button and link variants render without framework-specific markup", () => 
   assert.match(button, /type="button"/);
   assert.match(button, /aria-busy="true"/);
   assert.match(button, /data-status="busy"/);
-  assert.match(button, /dotterel-button__ripple/);
+  assert.match(button, /dotterel-ripple-host/);
+  assert.match(button, /class="dotterel-ripple dotterel-ripple--diamond"/);
+  assert.match(button, /--dotterel-ripple-press-duration:700ms/);
   assert.match(button, /dotterel-button__label/);
 
   assert.match(link, /^<a/);
   assert.match(link, /href="\/guide"/);
-  assert.doesNotMatch(link, /dotterel-button__ripple/);
+  // 無効化しても面の設定は残す。マス目のレイヤーだけ描かない
+  assert.match(link, /dotterel-ripple-host/);
+  assert.doesNotMatch(link, /class="dotterel-ripple /);
   assert.match(adaptedLink, /href="\/router-guide"/);
   assert.match(adaptedLink, /dotterel-button--primary/);
   assert.match(adaptedLink, /router-link/);
-  assert.match(adaptedLink, /dotterel-button__ripple/);
+  assert.match(adaptedLink, /class="dotterel-ripple dotterel-ripple--square"/);
 });
 
 test("progress components expose progressbar semantics and stable endpoints", () => {

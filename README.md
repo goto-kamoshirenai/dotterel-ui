@@ -1,6 +1,6 @@
 # dotterel-ui
 
-ドットを基本単位にした、軽量な React UI ライブラリです。ドットSVGアイコン、リップル付きボタン、進捗表示、カウントアップ、Canvas背景エフェクトを提供します。
+ドットを基本単位にした、軽量な React UI ライブラリです。ドットSVGアイコン、マス目が塗り替わるリップル付きボタン、進捗表示、カウントアップ、Canvas背景エフェクトを提供します。
 
 - React 18 / 19 対応
 - TypeScript の型定義を同梱
@@ -167,20 +167,56 @@ const SparkleIcon = createDotIcon(
 </DotLink>
 ```
 
-リップルは形、粒度、速度、濃さを変更できます。`ripple="none"` で無効化できます。
+リップルは面をマス目で覆い、1マスずつ塗り替えます。ホバーすると中心から外へホバー色が広がり、離れると外側から戻ります。押すと押した位置から外へ1マスずつ明滅します。マスの間に余白は置かず、点く順番にばらつきを混ぜているので、面が塗り替わりながらドットが立って見えます。
+
+形、マスの大きさ、押したときの明滅時間を変更できます。`ripple="none"` で無効化できます。
 
 ```tsx
 <DotButton
   ripple={{
     shape: "circle",
-    size: "sm",
-    duration: 800,
-    opacity: 0.35,
+    size: "lg",
+    duration: 400,
   }}
 >
-  ゆっくり広がる
+  大きな丸で
 </DotButton>
 ```
+
+| `size` | マスの辺 |
+| --- | --- |
+| `sm` | 8px |
+| `md` (既定) | 10px |
+| `lg` | 14px |
+| `xl` | 20px (サイドシートなど広い面向け) |
+
+色は `--dotterel-button-base` (面) と `--dotterel-ripple-fill` (ホバー色) で決まります。押したときの色 `--dotterel-ripple-press-fill` は既定でホバー色を文字色へ1段寄せたものになります。`prefers-reduced-motion: reduce` ではホバーの手がかりを残して広がる動きだけを省き、明滅は行いません。
+
+ボタン以外の面へ同じ演出を載せるときは `useDotRipple` を使います。ホストへ `dotterel-ripple-host` を付け、`layer` を最初の子として置き、本文は `dotterel-ripple-label` で包みます。
+
+```tsx
+import { useDotRipple } from "dotterel-ui/button";
+
+function NavLink({ href, children }: { href: string; children: ReactNode }) {
+  const { layer, press } = useDotRipple({ size: "sm" });
+
+  return (
+    <a
+      href={href}
+      className="nav-link dotterel-ripple-host"
+      onPointerDown={(event) => press(event.clientX, event.clientY)}
+      onClick={(event) => {
+        if (event.detail === 0) press(null, null);
+      }}
+    >
+      {layer}
+      <span className="dotterel-ripple-label">{children}</span>
+    </a>
+  );
+}
+```
+
+`useDotRipple` は `hasCells` (マスを作れたか) と `sweepMs` (横へ1列ずつ流しきる時間) も返します。`media` を渡すと、その条件に合うときだけマスを作ります。
 
 Next.jsやReact Routerのリンクを使う場合は `DotLinkAdapter` で既存のリンク要素を包みます。リンク先、prefetch、クライアント遷移などの機能は元のリンクコンポーネントが保持します。
 

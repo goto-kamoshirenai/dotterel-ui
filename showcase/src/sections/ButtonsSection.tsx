@@ -99,15 +99,15 @@ export function ButtonsSection() {
 
         <DemoFrame
           title="リップルの調整"
-          description="押した位置からドットが広がります。ripple='none' で止められます。"
-          code={`<DotButton ripple={{ shape: "circle", size: "lg", duration: 700 }}>
-  円のリップル
+          description="ホバーで中心からマスが塗り替わり、押すと押した位置から明滅します。shape と size でマスの形と大きさ、duration で明滅の時間を変えます。ripple='none' で止められます。"
+          code={`<DotButton ripple={{ shape: "circle", size: "lg", duration: 400 }}>
+  大きな丸のマス
 </DotButton>
 <DotButton ripple="none">リップルなし</DotButton>`}
         >
           <div className="row">
-            <DotButton type="button" ripple={{ shape: "circle", size: "lg", duration: 700 }}>
-              円のリップル
+            <DotButton type="button" ripple={{ shape: "circle", size: "lg", duration: 400 }}>
+              大きな丸のマス
             </DotButton>
             <DotButton type="button" ripple="none">
               リップルなし
