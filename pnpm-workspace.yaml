@@ -4,3 +4,11 @@ packages:
 # showcase の Vite が使う esbuild は、実行環境に合うバイナリを入れる必要がある
 allowBuilds:
   esbuild: true
+
+# 直接の依存ではなく、開発ツールの奥にある脆弱な版を引き上げる。
+# 公開物 (dist) には影響しないが、CIと手元の実行環境から取り除く
+overrides:
+  "@xmldom/xmldom@<0.8.15": ">=0.8.15"
+  brace-expansion@<1.1.17: "^1.1.17"
+  brace-expansion@>=4.0.0 <5.0.9: ">=5.0.9"
+  js-yaml@>=4.0.0 <4.3.1: ">=4.3.1"
