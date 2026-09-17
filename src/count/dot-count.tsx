@@ -8,6 +8,7 @@ import {
   type ComponentPropsWithoutRef,
   type ForwardedRef,
 } from "react";
+import { DEFAULT_DOT_DENSITY, type DotDensity } from "../core/dots.js";
 import { classNames } from "../internal/class-names.js";
 import { useDotCount, type UseDotCountOptions } from "./use-dot-count.js";
 
@@ -22,6 +23,8 @@ export type DotCountProps = NativeSpanProps &
     readonly startOn?: DotCountTrigger;
     readonly viewThreshold?: number;
     readonly font?: DotCountFont;
+    /** ドットの詰め方。`font="dot"` のときだけ効く */
+    readonly density?: DotDensity;
     readonly label?: string;
   };
 
@@ -43,6 +46,7 @@ function DotCountImplementation(
     startOn = "mount",
     viewThreshold = 0,
     font = "dot",
+    density = DEFAULT_DOT_DENSITY,
     label,
     className,
     ...spanProps
@@ -121,6 +125,7 @@ function DotCountImplementation(
       className={classNames(
         "dotterel-count",
         font === "dot" && "dotterel-text dotterel-text--tabular",
+        font === "dot" && density === "compact" && "dotterel-text--compact",
         className,
       )}
       data-status={status}
