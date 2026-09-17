@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  DEFAULT_DOT_DENSITY,
   DEFAULT_DOT_SHAPE,
   DEFAULT_PROGRESS_DOT_COUNT,
   DEFAULT_RIPPLE_DOT_SIZE,
   DEFAULT_RIPPLE_DURATION,
+  DOT_DENSITIES,
+  DOT_DENSITY_METRICS,
   DOT_METRICS,
   DOT_SHAPES,
   DOT_SIZES,
@@ -31,9 +34,13 @@ import {
   DEFAULT_ICON_ANIMATION,
   ICONS,
   ICON_ANIMATION_TRIGGERS,
+  ICON_GRIDS,
   ICON_NAMES,
+  ICON_SLOT_CELLS,
   defineDotIcon,
+  iconCells,
   iconGeometry,
+  iconSlotSpan,
   litCells,
   resolveIconAnimation,
 } from "../dist/icon/index.js";
@@ -42,19 +49,47 @@ test("dot vocabulary has stable shapes, sizes, and integer geometry", () => {
   assert.equal(DEFAULT_DOT_SHAPE, "square");
   assert.deepEqual([...DOT_SHAPES], ["square", "circle", "diamond"]);
   assert.deepEqual([...DOT_SIZES], ["sm", "md", "lg"]);
+  assert.deepEqual([...DOT_DENSITIES], ["comfortable", "compact"]);
+  assert.equal(DEFAULT_DOT_DENSITY, "comfortable");
+  assert.deepEqual(DOT_METRICS, DOT_DENSITY_METRICS.comfortable);
 
-  for (const size of DOT_SIZES) {
-    const { dot, gap } = DOT_METRICS[size];
-    const geometry = dotGeometry(5, size);
+  for (const density of DOT_DENSITIES) {
+    for (const size of DOT_SIZES) {
+      const { dot, gap } = DOT_DENSITY_METRICS[density][size];
+      const geometry = dotGeometry(5, size, density);
 
-    assert.ok(Number.isInteger(dot) && dot > 0);
-    assert.ok(Number.isInteger(gap) && gap >= 0);
-    assert.equal(geometry.span, dot * 5 + gap * 4);
-    assert.ok(Number.isInteger(geometry.span));
+      assert.ok(Number.isInteger(dot) && dot > 0);
+      assert.ok(Number.isInteger(gap) && gap >= 0);
+      assert.equal(geometry.dot, dot);
+      assert.equal(geometry.gap, gap);
+      assert.equal(geometry.pitch, dot + gap);
+      assert.equal(geometry.span, dot * 5 + gap * 4);
+      assert.ok(Number.isInteger(geometry.span));
+    }
   }
 
   assert.equal(dotGeometry(0, "md").span, 0);
   assert.equal(dotGeometry(-10, "md").span, 0);
+  assert.deepEqual(dotGeometry(5, "md"), dotGeometry(5, "md", DEFAULT_DOT_DENSITY));
+});
+
+test("compact density narrows the gap without shrinking the icon", () => {
+  for (const size of DOT_SIZES) {
+    const comfortable = DOT_DENSITY_METRICS.comfortable[size];
+    const compact = DOT_DENSITY_METRICS.compact[size];
+
+    // 隙間はドット1個ぶんより狭い。sm は 0 まで詰める
+    assert.ok(compact.gap < comfortable.gap, `${size} narrows the gap`);
+    assert.ok(compact.gap * 2 <= compact.dot, `${size} keeps the gap under half a dot`);
+
+    // 隙間を削ったぶんドットが太るので、5セルの外形はほぼ変わらない
+    const difference = Math.abs(
+      dotGeometry(5, size, "compact").span - dotGeometry(5, size, "comfortable").span,
+    );
+    assert.ok(difference <= 2, `${size} keeps the same footprint`);
+  }
+
+  assert.equal(DOT_DENSITY_METRICS.compact.sm.gap, 0);
 });
 
 test("rings and diamond points are deterministic", () => {
@@ -66,19 +101,26 @@ test("rings and diamond points are deterministic", () => {
 });
 
 test("built-in icon definitions are valid and unique", () => {
-  assert.ok(ICON_NAMES.length >= 53);
+  assert.ok(ICON_NAMES.length >= 54);
   const seen = new Set();
 
   for (const name of ICON_NAMES) {
     const { rows } = ICONS[name];
     const fingerprint = rows.join("/");
 
-    assert.equal(rows.length, 5, `${name} row count`);
+    const cells = rows.length;
+
+    assert.ok(ICON_GRIDS.includes(cells), `${name} uses a registered grid`);
     assert.ok(rows.some((row) => row.includes("#")), `${name} has a lit dot`);
+    assert.equal(
+      cells === 9,
+      name.endsWith("-detailed"),
+      `${name} marks a 9x9 grid with -detailed`,
+    );
 
     for (const row of rows) {
-      assert.equal(row.length, 5, `${name} column count`);
-      assert.match(row, /^[#.]{5}$/);
+      assert.equal(row.length, cells, `${name} column count`);
+      assert.match(row, /^[#.]+$/);
     }
 
     assert.ok(!seen.has(fingerprint), `${name} is unique`);
@@ -185,6 +227,26 @@ test("lit cells follow dot pitch and carry a ring index", () => {
     cells.map(({ ring }) => ring),
     [2, 2, 0, 2, 2],
   );
+});
+
+test("every grid draws into the same slot", () => {
+  const fine = ICONS["database-detailed"].rows;
+
+  assert.equal(ICON_SLOT_CELLS, 5);
+  assert.equal(iconCells(fine), 9);
+  assert.equal(iconCells(["..#..", "#...#"]), 5);
+
+  for (const density of DOT_DENSITIES) {
+    for (const size of DOT_SIZES) {
+      const slot = iconSlotSpan(size, density);
+
+      // 5×5 は等倍で描く。9×9 は自分のグリッドで測ってから同じ枠へ収める
+      assert.equal(slot, iconGeometry(ICONS.database.rows, size, density).span);
+      assert.ok(iconGeometry(fine, size, density).span > slot);
+    }
+  }
+
+  assert.equal(iconSlotSpan("md"), iconSlotSpan("md", DEFAULT_DOT_DENSITY));
 });
 
 test("icon animation shorthands and invalid numbers resolve safely", () => {

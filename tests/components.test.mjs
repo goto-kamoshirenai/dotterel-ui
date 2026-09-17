@@ -49,6 +49,31 @@ test("unlabeled and custom icons are decorative", () => {
   assert.match(custom, /<polygon/);
 });
 
+test("density narrows the gap and every grid keeps the same outer size", () => {
+  const comfortable = renderToStaticMarkup(
+    createElement(Icon, { name: "database", size: "lg" }),
+  );
+  const compact = renderToStaticMarkup(
+    createElement(Icon, { name: "database", size: "lg", density: "compact" }),
+  );
+  const detailed = renderToStaticMarkup(
+    createElement(Icon, { name: "database-detailed", size: "lg", density: "compact" }),
+  );
+
+  // comfortable の lg は dot 3 / gap 3 で 5 セル 27
+  assert.match(comfortable, /width="27"/);
+  assert.match(comfortable, /viewBox="0 0 27 27"/);
+
+  // compact の lg は dot 5 / gap 1 で 5 セル 29。隙間が 1 まで詰まる
+  assert.match(compact, /width="29"/);
+  assert.match(compact, /viewBox="0 0 29 29"/);
+
+  // 9×9 でも外形は 5×5 と同じ。viewBox だけが自分のグリッドに合う
+  assert.match(detailed, /width="29"/);
+  assert.match(detailed, /height="29"/);
+  assert.match(detailed, /viewBox="0 0 53 53"/);
+});
+
 test("button and link variants render without framework-specific markup", () => {
   const button = renderToStaticMarkup(
     createElement(

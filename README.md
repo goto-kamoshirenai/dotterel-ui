@@ -64,6 +64,7 @@ export function Dashboard() {
 <Icon name="crown" />
 <Icon name="check" label="完了" shape="circle" size="lg" />
 <Icon name="star" animation="mount" />
+<Icon name="database-detailed" size="lg" density="compact" />
 <Icon
   name="alert"
   animation={{ trigger: "hover", repeat: 2, duration: 400, spread: 40 }}
@@ -98,7 +99,7 @@ const SparkleIcon = createDotIcon(
 <SparkleIcon label="新着" shape="diamond" />;
 ```
 
-登録済みの名前は `ICON_NAMES`、定義は `ICONS` から取得できます。すべてのアイコンは5×5のドット行列なので、同じ `size` なら描画サイズが揃います。
+登録済みの名前は `ICON_NAMES`、定義は `ICONS` から取得できます。行列は5×5か9×9で、どちらでも同じ `size` なら描画サイズが揃います。
 
 | 分類 | 名前 |
 | --- | --- |
@@ -109,12 +110,44 @@ const SparkleIcon = createDotIcon(
 | 検索と絞り込み | `search` `filter` `sort` `checklist` |
 | 編集 | `edit` `copy` `save` `trash` `undo` |
 | 書籍と文書 | `book` `document` `quote` `bookmark` `bookmark-filled` `tag` |
-| 場所と接続 | `home` `building` `desktop` `database` `network` `link` `external-link` `image-off` |
+| 場所と接続 | `home` `building` `desktop` `database` `database-detailed` `network` `link` `external-link` `image-off` |
 | 人と連絡 | `user` `message` `login` `logout` `settings` |
+
+### ドットの間隔
+
+`density` でドットとドットの隙間を切り替えます。既定は `comfortable` で、これまでと同じ見た目です。`compact` は隙間を最小限まで詰めます。
+
+```tsx
+<Icon name="database" density="compact" />
+<Icon name="database" size="lg" density="compact" />
+<Icon name="database" size="sm" density="compact" />
+```
+
+| `density` | `sm` | `md` | `lg` |
+| --- | --- | --- | --- |
+| `comfortable` | ドット2 / 隙間1 | ドット2 / 隙間2 | ドット3 / 隙間3 |
+| `compact` | ドット3 / 隙間0 | ドット3 / 隙間1 | ドット5 / 隙間1 |
+
+大きく表示するほど隙間が目立つため、`compact` では隙間をドット1個ぶんではなく1単位に固定します。小さい `sm` では隙間を0にして、輪郭がつぶれないようにします。隙間を削ったぶんドットを太らせるので、`density` を変えても5セルの外形はほぼ同じ大きさのままです。並べたアイコンの位置はずれません。
+
+隙間が0でもアニメーションは1ドットずつ動きます。輪郭がつながって見えても、動かすとドットで組んだ形だと分かります。
+
+### 9×9のアイコン
+
+5×5では潰れてしまう造形には9×9の行列を使います。9×9のアイコン名には `-detailed` を付けます。
+
+`DotIcon` は行列のグリッドを `viewBox` に、5×5ぶんの一辺を `width` と `height` に割り当てます。そのため9×9でも5×5と同じ枠に収まり、同じ `size` で並べたときに大きさが揃います。1ドットは細かくなるので、9×9は `size="lg"` や `density="compact"` と組み合わせて使ってください。
+
+```tsx
+<Icon name="database" />                              {/* 5×5 */}
+<Icon name="database-detailed" density="compact" />   {/* 9×9・同じ大きさ */}
+```
+
+グリッドの一覧は `ICON_GRIDS`、描画枠の基準セル数は `ICON_SLOT_CELLS`、実際の一辺は `iconSlotSpan(size, density)` から取得できます。
 
 ### 1記号にしない意味
 
-5×5で判別しにくい意味は、アイコンを増やさずに近い意味の登録済みアイコンへ寄せるか、アイコンを使わずテキストだけで示します。アイコンを複数並べて1つの意味を作ることはしません。
+5×5でも9×9でも判別しにくい意味は、アイコンを増やさずに近い意味の登録済みアイコンへ寄せるか、アイコンを使わずテキストだけで示します。アイコンを複数並べて1つの意味を作ることはしません。
 
 ## ボタンとリンク
 

@@ -1,11 +1,12 @@
 import { ICONS, Icon, type IconAnimationTrigger, type IconName } from "dotterel-ui/icon";
-import type { DotShape, DotSize } from "dotterel-ui/core";
+import type { DotDensity, DotShape, DotSize } from "dotterel-ui/core";
 
 import { CATEGORY_LABELS, ICON_METADATA } from "../catalog/icon-metadata";
 import { CopyCodeButton } from "./CopyCodeButton";
 
 export type IconDisplay = {
   readonly size: DotSize;
+  readonly density: DotDensity;
   readonly shape: DotShape;
   readonly animation: IconAnimationTrigger | "none";
 };
@@ -21,6 +22,7 @@ export function iconSnippet(name: IconName, display: IconDisplay): string {
   const props = [`name="${name}"`];
 
   if (display.size !== "md") props.push(`size="${display.size}"`);
+  if (display.density !== "comfortable") props.push(`density="${display.density}"`);
   if (display.shape !== "square") props.push(`shape="${display.shape}"`);
   if (display.animation !== "none") props.push(`animation="${display.animation}"`);
 
@@ -40,6 +42,7 @@ export function IconCard({ name, display, replayKey }: IconCardProps) {
           key={`${replayKey}-${display.animation}`}
           name={name}
           size={display.size}
+          density={display.density}
           shape={display.shape}
           {...(animation ? { animation } : {})}
         />
@@ -50,11 +53,17 @@ export function IconCard({ name, display, replayKey }: IconCardProps) {
       </p>
       <div className="icon-card__variants">
         <span className="icon-card__variant">
-          <Icon name={name} size="sm" shape={display.shape} />
+          <Icon name={name} size="sm" density={display.density} shape={display.shape} />
           <span className="icon-card__caption">装飾</span>
         </span>
         <span className="icon-card__variant">
-          <Icon name={name} size="sm" shape={display.shape} label={name} />
+          <Icon
+            name={name}
+            size="sm"
+            density={display.density}
+            shape={display.shape}
+            label={name}
+          />
           <span className="icon-card__caption">label あり</span>
         </span>
       </div>

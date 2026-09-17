@@ -2,6 +2,29 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.5.0 - 2026-09-17
+
+### Added
+
+- アイコンのドットの間隔を切り替える `density`。既定の `comfortable` は
+  これまでと同じ見た目で、`compact` は隙間を最小限まで詰める
+  (`sm` は0、`md` と `lg` は1)。隙間を削ったぶんドットが太るので、
+  切り替えても5セルの外形はほぼ同じ大きさのままになる
+- 密度の語彙 `DotDensity`、`DOT_DENSITIES`、`DEFAULT_DOT_DENSITY`、
+  `DOT_DENSITY_METRICS`、`DotMetric`。`dotGeometry` は第3引数で密度を受け取る
+- 9×9のドット行列に対応。5×5では潰れてしまう造形を表現できる。
+  9×9のアイコン名には `-detailed` を付ける
+- 9×9の登録済みアイコン `database-detailed`
+- グリッドと描画枠を扱う `ICON_GRIDS`、`ICON_SLOT_CELLS`、`iconCells`、
+  `iconSlotSpan`。`iconGeometry` は第3引数で密度を受け取る
+- showcaseにドットの間隔の切り替えを追加
+
+### Changed
+
+- `DotIcon` は行列のグリッドを `viewBox` に、5×5ぶんの一辺を `width` と
+  `height` に割り当てる。9×9などの細かいグリッドでも、同じ `size` なら
+  5×5と同じ大きさで並ぶ。5×5のアイコンの描画結果は変わらない
+
 ## 0.4.1 - 2026-08-30
 
 ### Changed

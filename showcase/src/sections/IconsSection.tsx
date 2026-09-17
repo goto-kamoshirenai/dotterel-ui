@@ -1,10 +1,18 @@
 import { useDeferredValue, useId, useMemo, useState } from "react";
 
 import { DotButton } from "dotterel-ui/button";
-import { DOT_SHAPES, DOT_SIZES, type DotShape, type DotSize } from "dotterel-ui/core";
+import {
+  DOT_DENSITIES,
+  DOT_SHAPES,
+  DOT_SIZES,
+  type DotDensity,
+  type DotShape,
+  type DotSize,
+} from "dotterel-ui/core";
 import { ICON_NAMES, Icon, type IconAnimationTrigger, type IconName } from "dotterel-ui/icon";
 
 import { CATEGORY_LABELS, ICON_METADATA } from "../catalog/icon-metadata";
+import { IconApiDemos } from "../components/IconApiDemos";
 import { IconCard, type IconDisplay } from "../components/IconCard";
 
 const ANIMATIONS: readonly (IconAnimationTrigger | "none")[] = [
@@ -13,6 +21,11 @@ const ANIMATIONS: readonly (IconAnimationTrigger | "none")[] = [
   "hover",
   "always",
 ];
+
+const DENSITY_LABELS: Readonly<Record<DotDensity, string>> = {
+  comfortable: "ゆったり",
+  compact: "詰める",
+};
 
 const ANIMATION_LABELS: Readonly<Record<IconAnimationTrigger | "none", string>> = {
   none: "なし",
@@ -35,6 +48,7 @@ export function IconsSection() {
   const searchId = useId();
   const [query, setQuery] = useState("");
   const [size, setSize] = useState<DotSize>("md");
+  const [density, setDensity] = useState<DotDensity>("comfortable");
   const [shape, setShape] = useState<DotShape>("square");
   const [animation, setAnimation] = useState<IconAnimationTrigger | "none">("hover");
   const [replayKey, setReplayKey] = useState(0);
@@ -47,7 +61,7 @@ export function IconsSection() {
     return ICON_NAMES.filter((name) => SEARCH_INDEX.get(name)?.includes(needle));
   }, [deferredQuery]);
 
-  const display: IconDisplay = { size, shape, animation };
+  const display: IconDisplay = { size, density, shape, animation };
 
   return (
     <section id="icons" className="section" aria-labelledby="icons-heading">
@@ -90,6 +104,24 @@ export function IconsSection() {
                   onChange={() => setSize(option)}
                 />
                 <span>{option}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="switcher">
+          <legend className="switcher__legend">ドットの間隔</legend>
+          <div className="switcher__options">
+            {DOT_DENSITIES.map((option) => (
+              <label key={option} className="switcher__option">
+                <input
+                  type="radio"
+                  name="icon-density"
+                  value={option}
+                  checked={density === option}
+                  onChange={() => setDensity(option)}
+                />
+                <span>{DENSITY_LABELS[option]}</span>
               </label>
             ))}
           </div>
@@ -154,6 +186,8 @@ export function IconsSection() {
           ))}
         </ul>
       )}
+
+      <IconApiDemos />
     </section>
   );
 }

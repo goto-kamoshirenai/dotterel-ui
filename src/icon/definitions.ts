@@ -1,4 +1,11 @@
-import { dotGeometry, ringIndex, type DotGeometry, type DotSize } from "../core/dots.js";
+import {
+  DEFAULT_DOT_DENSITY,
+  dotGeometry,
+  ringIndex,
+  type DotDensity,
+  type DotGeometry,
+  type DotSize,
+} from "../core/dots.js";
 
 export type DotIconDefinition = {
   readonly rows: readonly string[];
@@ -49,6 +56,19 @@ const DEFINITIONS = {
   building: { rows: [".####", ".#..#", ".####", ".#..#", ".####"] },
   desktop: { rows: ["#####", "#...#", "#####", "..#..", ".###."] },
   database: { rows: [".###.", "#...#", ".###.", "#...#", ".###."] },
+  "database-detailed": {
+    rows: [
+      "..#####..",
+      ".#.....#.",
+      "..#####..",
+      ".#.....#.",
+      ".#.....#.",
+      "..#####..",
+      ".#.....#.",
+      ".#.....#.",
+      "..#####..",
+    ],
+  },
   network: { rows: ["##.##", ".#.#.", "..#..", ".#.#.", "##.##"] },
   link: { rows: ["...##", "..#.#", ".###.", "#.#..", "##..."] },
   "external-link": { rows: ["..###", "...##", "###.#", "#.#..", "###.."] },
@@ -86,9 +106,38 @@ export function defineDotIcon(rows: readonly string[]): DotIconDefinition {
   });
 }
 
-export function iconGeometry(rows: readonly string[], size: DotSize): DotGeometry {
-  const cells = Math.max(rows.length, ...rows.map((row) => row.length), 0);
-  return dotGeometry(cells, size);
+/**
+ * 登録済みアイコンが使うグリッド。5×5を基準にして、5×5では潰れてしまう
+ * 造形だけ9×9を使う。9×9のアイコン名には `-detailed` を付ける。
+ */
+export const ICON_GRIDS: readonly number[] = [5, 9];
+
+/**
+ * 描画枠の基準セル数。どのグリッドのアイコンも、同じ `size` と `density`
+ * なら5×5と同じ一辺で描く。細かいグリッドはその枠へ収まるよう縮む。
+ */
+export const ICON_SLOT_CELLS = 5;
+
+/** 行列の一辺のセル数。行と列が違う場合は大きいほうに合わせる */
+export function iconCells(rows: readonly string[]): number {
+  return Math.max(rows.length, ...rows.map((row) => row.length), 0);
+}
+
+/** 行列自身のグリッド寸法。ドットの位置と `viewBox` に使う */
+export function iconGeometry(
+  rows: readonly string[],
+  size: DotSize,
+  density: DotDensity = DEFAULT_DOT_DENSITY,
+): DotGeometry {
+  return dotGeometry(iconCells(rows), size, density);
+}
+
+/** 描画する一辺の長さ。グリッドの細かさに関わらず同じ大きさになる */
+export function iconSlotSpan(
+  size: DotSize,
+  density: DotDensity = DEFAULT_DOT_DENSITY,
+): number {
+  return dotGeometry(ICON_SLOT_CELLS, size, density).span;
 }
 
 export type LitCell = {

@@ -79,12 +79,50 @@ describe("IconsSection", () => {
   });
 
   it("コピーするコードは公開 API の JSX になる", () => {
-    expect(iconSnippet("book", { size: "md", shape: "square", animation: "none" })).toBe(
-      '<Icon name="book" />',
+    expect(
+      iconSnippet("book", {
+        size: "md",
+        density: "comfortable",
+        shape: "square",
+        animation: "none",
+      }),
+    ).toBe('<Icon name="book" />');
+    expect(
+      iconSnippet("trash", {
+        size: "lg",
+        density: "compact",
+        shape: "circle",
+        animation: "hover",
+      }),
+    ).toBe('<Icon name="trash" size="lg" density="compact" shape="circle" animation="hover" />');
+  });
+
+  it("間隔の切り替えで隙間が詰まり、外形はほとんど変わらない", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<IconsSection />);
+
+    await user.click(screen.getByRole("radio", { name: "詰める" }));
+
+    const stages = container.querySelectorAll(".icon-card__stage svg");
+
+    expect(stages).toHaveLength(ICON_NAMES.length);
+    for (const stage of stages) {
+      // md の compact は dot 3 / gap 1 なので 5 セルで 19 (comfortable は 18)
+      expect(stage.getAttribute("width")).toBe("19");
+    }
+  });
+
+  it("9×9 のアイコンも 5×5 と同じ大きさで並ぶ", () => {
+    const { container } = render(<IconsSection />);
+
+    const sizes = new Set(
+      Array.from(container.querySelectorAll(".icon-card__stage svg")).map((svg) =>
+        svg.getAttribute("width"),
+      ),
     );
-    expect(iconSnippet("trash", { size: "lg", shape: "circle", animation: "hover" })).toBe(
-      '<Icon name="trash" size="lg" shape="circle" animation="hover" />',
-    );
+
+    expect(sizes).toEqual(new Set(["18"]));
+    expect(screen.getByText("場所と接続 ・ 9×9")).toBeInTheDocument();
   });
 
   it("アイコンだけの操作にはアクセシブルネームがある", () => {

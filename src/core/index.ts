@@ -1,12 +1,17 @@
 export {
+  DEFAULT_DOT_DENSITY,
   DEFAULT_DOT_SHAPE,
+  DOT_DENSITIES,
+  DOT_DENSITY_METRICS,
   DOT_METRICS,
   DOT_SHAPES,
   DOT_SIZES,
   diamondPoints,
   dotGeometry,
   ringIndex,
+  type DotDensity,
   type DotGeometry,
+  type DotMetric,
   type DotShape,
   type DotSize,
 } from "./dots.js";

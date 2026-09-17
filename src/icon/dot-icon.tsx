@@ -5,8 +5,10 @@ import {
   type ForwardedRef,
 } from "react";
 import {
+  DEFAULT_DOT_DENSITY,
   DEFAULT_DOT_SHAPE,
   diamondPoints,
+  type DotDensity,
   type DotShape,
   type DotSize,
 } from "../core/dots.js";
@@ -15,6 +17,7 @@ import {
   ICONS,
   defineDotIcon,
   iconGeometry,
+  iconSlotSpan,
   litCells,
   resolveIconAnimation,
   type IconAnimation,
@@ -31,6 +34,7 @@ export type DotIconProps = NativeSvgProps & {
   readonly rows: readonly string[];
   readonly label?: string;
   readonly size?: DotSize;
+  readonly density?: DotDensity;
   readonly shape?: DotShape;
   readonly animation?: IconAnimationTrigger | IconAnimation;
 };
@@ -44,6 +48,7 @@ function DotIconImplementation(
     rows,
     label,
     size = "md",
+    density = DEFAULT_DOT_DENSITY,
     shape = DEFAULT_DOT_SHAPE,
     animation,
     className,
@@ -52,7 +57,10 @@ function DotIconImplementation(
   }: DotIconProps,
   ref: ForwardedRef<SVGSVGElement>,
 ) {
-  const geometry = iconGeometry(rows, size);
+  const geometry = iconGeometry(rows, size, density);
+  // 9×9のような細かいグリッドでも5×5と同じ枠に収める。viewBox だけが
+  // グリッドに追従し、外形の一辺は size と density だけで決まる。
+  const span = geometry.span === 0 ? 0 : iconSlotSpan(size, density);
   const motion = animation === undefined ? null : resolveIconAnimation(animation);
   const classes = classNames(
     "dotterel-icon",
@@ -74,8 +82,8 @@ function DotIconImplementation(
       ref={ref}
       className={classes}
       style={motionStyle}
-      width={geometry.span}
-      height={geometry.span}
+      width={span}
+      height={span}
       viewBox={`0 0 ${geometry.span} ${geometry.span}`}
       focusable="false"
       {...(label === undefined
