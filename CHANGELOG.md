@@ -2,6 +2,15 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.7.2 - 2026-10-15
+
+### Changed
+
+- README に Astro での利用方法を追加した。`@astrojs/react` 経由でそのまま使えること、
+  `client:*` なしで HTML と CSS だけで成立するコンポーネント、island が必要な
+  コンポーネント、`.astro` から `DotLinkAdapter` を直接使えない理由を記した。
+  ライブラリ本体の変更はない
+
 ## 0.7.1 - 2026-09-17
 
 ### Changed
