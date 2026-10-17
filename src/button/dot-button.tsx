@@ -17,37 +17,30 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { DEFAULT_DOT_SHAPE, type DotShape } from "../core/dots.js";
+import { DEFAULT_DOT_SHAPE } from "../core/dots.js";
 import {
-  DEFAULT_RIPPLE_CELL_DURATION,
   DEFAULT_RIPPLE_DOT_SIZE,
-  DEFAULT_RIPPLE_STEP,
-  pressOrigin,
   resolveRippleDuration,
-  rippleGrid,
   sweepDuration,
-  type RippleDotSize,
   type RippleGrid,
 } from "../core/ripple.js";
 import { classNames } from "../internal/class-names.js";
+import {
+  observeRippleGrid,
+  pressRipple,
+  rippleCellKey,
+  rippleCellStyle,
+  RIPPLE_CELL_CLASS,
+  rippleLayerClassName,
+  rippleLayerStyle,
+  type DotRippleOptions,
+} from "../internal/ripple-layer.js";
+
+export type { DotRippleOptions } from "../internal/ripple-layer.js";
 
 export type DotButtonVariant = "default" | "primary" | "quiet" | "danger";
 
 export type DotButtonStatus = "idle" | "busy";
-
-export type DotRippleOptions = {
-  /** マスの形。既定は四角。余白が無いので、四角のときだけ面がすき間なく塗り替わる */
-  readonly shape?: DotShape;
-  /** マス1つの辺の大きさ */
-  readonly size?: RippleDotSize;
-  /** 押したときに1マスが明滅する時間 (ms) */
-  readonly duration?: number;
-  /**
-   * この条件に合うときだけマスを作る (合わないあいだは何も描かない)。
-   * 画面幅で演出の有無が変わる場所で、余分な要素を作らないために使う。
-   */
-  readonly media?: string;
-};
 
 export type DotRipple = {
   /** ホストの最初の子として置く演出レイヤー。`ripple="none"` のときは null */
@@ -276,10 +269,6 @@ function useMediaMatches(media: string | undefined): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
-function sameGrid(a: RippleGrid | null, b: RippleGrid): boolean {
-  return a !== null && a.columns === b.columns && a.rows === b.rows && a.cell === b.cell;
-}
-
 /**
  * ドットのリップル。面をマス目で覆い、1マスずつ塗り替える。
  *
@@ -337,57 +326,15 @@ export function useDotRipple(options?: DotRippleOptions | "none"): DotRipple {
       return;
     }
 
-    const measure = () => {
-      const rect = host.getBoundingClientRect();
-      const next = rippleGrid(rect.width, rect.height, size);
-
-      // 数が変わらないなら作り直さない (1pxの揺れで数百要素を捨てない)
-      if (sameGrid(gridRef.current, next)) {
-        return;
-      }
-
+    // 数が変わらないなら作り直さない (1pxの揺れで数百要素を捨てない)
+    return observeRippleGrid(host, size, () => gridRef.current, (next) => {
       gridRef.current = next;
       setGrid(next);
-    };
-
-    if (typeof ResizeObserver === "undefined") {
-      const schedule =
-        typeof window.requestAnimationFrame === "function"
-          ? { set: window.requestAnimationFrame, clear: window.cancelAnimationFrame }
-          : { set: (callback: () => void) => window.setTimeout(callback, 0), clear: window.clearTimeout };
-      const handle = schedule.set(measure);
-      window.addEventListener("resize", measure);
-      return () => {
-        schedule.clear(handle);
-        window.removeEventListener("resize", measure);
-      };
-    }
-
-    const observer = new ResizeObserver(measure);
-    observer.observe(host);
-    return () => observer.disconnect();
+    });
   }, [enabled, size, mediaMatches]);
 
   const press = useCallback((clientX: number | null, clientY: number | null) => {
-    const layer = layerRef.current;
-    const current = gridRef.current;
-
-    if (layer === null || current === null || current.cells.length === 0) {
-      return;
-    }
-
-    const rect = layer.getBoundingClientRect();
-    const origin =
-      clientX === null || clientY === null
-        ? pressOrigin(current, Number.NaN, Number.NaN)
-        : pressOrigin(current, clientX - rect.left, clientY - rect.top);
-
-    layer.style.setProperty("--dotterel-ripple-press-x", String(origin.x));
-    layer.style.setProperty("--dotterel-ripple-press-y", String(origin.y));
-    // 属性を付け直すだけでは再生し直されない。一度外して配置を確定させる
-    layer.removeAttribute("data-press");
-    void layer.offsetWidth;
-    layer.setAttribute("data-press", "");
+    pressRipple(layerRef.current, gridRef.current, clientX, clientY);
   }, []);
 
   // 条件に合わないあいだは、前に測ったマスがあっても描かない
@@ -399,34 +346,19 @@ export function useDotRipple(options?: DotRippleOptions | "none"): DotRipple {
     return { layer: null, press, hasCells: false, sweepMs };
   }
 
+  // クラス名とCSS変数は DOM 版 (mountDotRipple) と同じ組み立てを使い、ずれないようにする
   const layer = (
     <span
       ref={layerRef}
-      className={`dotterel-ripple dotterel-ripple--${shape}`}
+      className={rippleLayerClassName(shape)}
       aria-hidden="true"
-      style={
-        {
-          "--dotterel-ripple-columns": activeGrid?.columns ?? 0,
-          "--dotterel-ripple-cell": `${activeGrid?.cell ?? 0}px`,
-          "--dotterel-ripple-ring-span": activeGrid?.ringSpan ?? 0,
-          "--dotterel-ripple-step": `${DEFAULT_RIPPLE_STEP}ms`,
-          "--dotterel-ripple-cell-duration": `${DEFAULT_RIPPLE_CELL_DURATION}ms`,
-          "--dotterel-ripple-press-duration": `${duration}ms`,
-        } as CSSProperties
-      }
+      style={rippleLayerStyle(activeGrid, duration) as CSSProperties}
     >
       {activeGrid?.cells.map((cell) => (
         <span
-          key={`${cell.x}-${cell.y}`}
-          className="dotterel-ripple__cell"
-          style={
-            {
-              "--dotterel-ripple-ring": cell.ring,
-              "--dotterel-ripple-jitter": `${cell.jitter}ms`,
-              "--dotterel-ripple-cx": cell.x,
-              "--dotterel-ripple-cy": cell.y,
-            } as CSSProperties
-          }
+          key={rippleCellKey(cell)}
+          className={RIPPLE_CELL_CLASS}
+          style={rippleCellStyle(cell) as CSSProperties}
         />
       ))}
     </span>

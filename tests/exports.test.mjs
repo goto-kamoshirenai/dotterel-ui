@@ -3,11 +3,12 @@ import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 test("all documented JavaScript export paths resolve", async () => {
-  const [root, button, core, count, effects, icon, progress, text] = await Promise.all([
+  const [root, button, core, count, dom, effects, icon, progress, text] = await Promise.all([
     import("dotterel-ui"),
     import("dotterel-ui/button"),
     import("dotterel-ui/core"),
     import("dotterel-ui/count"),
+    import("dotterel-ui/dom"),
     import("dotterel-ui/effects"),
     import("dotterel-ui/icon"),
     import("dotterel-ui/progress"),
@@ -23,6 +24,12 @@ test("all documented JavaScript export paths resolve", async () => {
   assert.equal(root.Icon, icon.Icon);
   assert.equal(root.DotProgress, progress.DotProgress);
   assert.equal(root.DotText, text.DotText);
+  assert.equal(typeof dom.mountDotRipple, "function");
+  assert.equal(typeof dom.mountDotCount, "function");
+  assert.equal(typeof dom.mountDotField, "function");
+  assert.equal(typeof dom.createCountRunner, "function");
+  // React を使わない入口は、React の部品をまとめた入口からは出さない
+  assert.equal(root.mountDotRipple, undefined);
 });
 
 test("package metadata keeps React external and exposes the stylesheet", async () => {
@@ -33,5 +40,10 @@ test("package metadata keeps React external and exposes the stylesheet", async (
   assert.equal(metadata.dependencies, undefined);
   assert.equal(metadata.peerDependencies.react, ">=18.2.0 <20");
   assert.equal(metadata.exports["./styles.css"], "./dist/styles.css");
+  assert.deepEqual(metadata.exports["./dom"], {
+    types: "./dist/dom/index.d.ts",
+    import: "./dist/dom/index.js",
+    default: "./dist/dom/index.js",
+  });
   assert.deepEqual(metadata.sideEffects, ["./dist/styles.css"]);
 });

@@ -2,6 +2,35 @@
 
 このプロジェクトの主な変更を記録します。バージョン番号は [Semantic Versioning](https://semver.org/) に従います。
 
+## 0.8.0 - 2026-10-18
+
+### Added
+
+- React を使わない入口 `dotterel-ui/dom` を追加した。静的に描いた HTML
+  (Astro で `client:*` を付けずに置いたコンポーネントなど) へ、あとから
+  React 版と同じ動きを付ける。React の実行環境を読み込まずに済む
+  - `mountDotRipple(host, options?)`: `useDotRipple` と同じレイヤーをホストの
+    最初の子へ置き、寸法の変化と押したときの処理を受け持つ。`bindEvents` で
+    押したときの処理を外せ、`onChange` でマス目の作り直しを受け取れる。
+    戻り値は `{ layer, press, hasCells, sweepMs, destroy }`
+  - `mountDotCount(element, options)`: `DotCount` と同じ組み立てで数を動かす。
+    `startOn` (`mount` / `view` / `manual`) に対応。戻り値は
+    `{ start, pause, resume, reset, destroy, status }`
+  - `mountDotField(target, options?)`: `DotField` と同じ要素を置き、Canvas を
+    描き続ける。戻り値は `{ element, destroy }`
+  - `createCountRunner`、`resolveCountSettings`: `useDotCount` と共通の
+    カウントの進行役。表示を自分で組むときに使う
+- どの関数も、すでに静的に描いたマークアップがあれば使い回す
+
+### Changed
+
+- `useDotRipple`、`useDotCount`、`DotField` の内部を、React に依存しない
+  中核 (リップルの計測・押下・CSS 変数の組み立て、カウントの進行、
+  Canvas の描画) を呼ぶ形へ組み替えた。`dotterel-ui/dom` と同じ中核を
+  使うので、両者の出力がずれない。公開 API と描画結果は変わらない
+- README の Astro の節に、island にせず `dotterel-ui/dom` で動きを付ける
+  方法を加えた
+
 ## 0.7.2 - 2026-10-15
 
 ### Changed
