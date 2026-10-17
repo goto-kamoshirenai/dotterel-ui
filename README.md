@@ -9,6 +9,7 @@
 - SSR対応。Next.js と Astro (`@astrojs/react`) で確認済み
 - `prefers-reduced-motion` と強制カラーモードに対応
 - 機能別のサブパスimportに対応
+- React を使わない入口 `dotterel-ui/dom` で、静的な HTML にも同じ動きを付けられる
 
 ## インストール
 
@@ -216,7 +217,7 @@ function NavLink({ href, children }: { href: string; children: ReactNode }) {
 }
 ```
 
-`useDotRipple` は `hasCells` (マスを作れたか) と `sweepMs` (横へ1列ずつ流しきる時間) も返します。`media` を渡すと、その条件に合うときだけマスを作ります。
+`useDotRipple` は `hasCells` (マスを作れたか) と `sweepMs` (横へ1列ずつ流しきる時間) も返します。`media` を渡すと、その条件に合うときだけマスを作ります。React を使わない場合は、同じ演出を [`dotterel-ui/dom`](#react-を使わずに動かす) の `mountDotRipple` で付けられます。
 
 Next.jsやReact Routerのリンクを使う場合は `DotLinkAdapter` で既存のリンク要素を包みます。リンク先、prefetch、クライアント遷移などの機能は元のリンクコンポーネントが保持します。
 
@@ -387,13 +388,14 @@ OS設定に応じたダークテーマが標準で有効です。明示的に切
 import { DotButton } from "dotterel-ui/button";
 import { ratioOf } from "dotterel-ui/core";
 import { DotCount } from "dotterel-ui/count";
+import { mountDotRipple } from "dotterel-ui/dom";
 import { DotField } from "dotterel-ui/effects";
 import { Icon } from "dotterel-ui/icon";
 import { DotProgress } from "dotterel-ui/progress";
 import { DotText } from "dotterel-ui/text";
 ```
 
-`dotterel-ui/core` は React に依存しません。
+`dotterel-ui/core` と `dotterel-ui/dom` は React に依存しません。
 
 ## Astro で使う
 
@@ -430,19 +432,19 @@ import { formatCount } from "dotterel-ui/core";
 <DotText tabular>{formatCount(12345)} PT</DotText>
 ```
 
-`animation="hover"` のアイコンは CSS で動くため、`client:*` が無くてもホバーに反応します。`DotButton` と `DotLink` のリップルは JavaScript が必要なので、静的に置いた場合はリップルのない通常のボタンとリンクになります。
+`animation="hover"` のアイコンは CSS で動くため、`client:*` が無くてもホバーに反応します。`DotButton` と `DotLink` のリップルは JavaScript が必要なので、静的に置いただけではリップルのない通常のボタンとリンクになります。island にせずにリップルやカウントを動かすには、`dotterel-ui/dom` を普通の `<script>` から呼びます ([React を使わずに動かす](#react-を使わずに動かす))。
 
 `DotLinkAdapter` は子要素を React 要素として受け取るため、`.astro` から直接は使えません。Astro のページ内リンクには `DotLink` を使い、`DotLinkAdapter` は island にした React コンポーネントの中で使ってください。
 
 ### island にするもの
 
-動きや状態を持つコンポーネントには `client:*` ディレクティブを付けます。
+動きや状態を持つコンポーネントを React のまま動かすには、`client:*` ディレクティブを付けます。island はページへ React の実行環境を読み込みます。リップル、カウント、背景エフェクトだけが目的なら、island にせず `dotterel-ui/dom` を使うほうが軽く済みます。
 
 | コンポーネント | ディレクティブ | 付けない場合 |
 | --- | --- | --- |
-| `DotCount`、`useDotCount` | `client:visible` など | `from` の値 (既定は `0`) のまま止まる |
-| `DotField` | `client:idle` など | Canvas に描けないため何も表示されない |
-| `DotButton`、`DotLink` のリップル、`useDotRipple` | `client:*` | リップルのないボタンとリンクになる |
+| `DotCount`、`useDotCount` | `client:visible` など | `from` の値 (既定は `0`) のまま止まる (`mountDotCount` で動かせる) |
+| `DotField` | `client:idle` など | Canvas に描けないため何も表示されない (`mountDotField` で動かせる) |
+| `DotButton`、`DotLink` のリップル、`useDotRipple` | `client:*` | リップルのないボタンとリンクになる (`mountDotRipple` で動かせる) |
 
 ```astro
 ---
@@ -483,6 +485,107 @@ import { Score } from "../components/Score";
 ```
 
 ダークテーマの固定は、他の環境と同じく `<html data-dotterel-theme="dark">` で行います。
+
+## React を使わずに動かす
+
+`dotterel-ui/dom` は React に依存しない入口です。静的に描いた HTML (Astro で `client:*` を付けずに置いたコンポーネントなど) へ、あとから同じ動きを付けます。React 版のフックとコンポーネントも同じ中身を使っているため、クラス名、CSS 変数、動き方は React 版と変わりません。
+
+| 関数 | React 版 | 戻り値 |
+| --- | --- | --- |
+| `mountDotRipple(host, options?)` | `useDotRipple`、`DotButton` のリップル | `{ layer, press, hasCells, sweepMs, destroy }` |
+| `mountDotCount(element, options)` | `DotCount`、`useDotCount` | `{ start, pause, resume, reset, destroy, status }` |
+| `mountDotField(target, options?)` | `DotField` | `{ element, destroy }` |
+
+どの関数も、すでに静的に描いたマークアップがあればそれを使い回し、無ければ React 版と同じ要素を組み立てます。
+
+### Astro の例
+
+コンポーネントは `@astrojs/react` で `client:*` を付けずに置き、普通の `<script>` から動きを付けます。ページに React の実行環境は読み込まれません。
+
+```astro
+---
+import "dotterel-ui/styles.css";
+import { DotButton, DotCount, DotField, DotProgress, Icon } from "dotterel-ui";
+---
+
+<section class="hero">
+  <DotField placement="absolute" />
+  <DotButton variant="primary" ripple={{ shape: "diamond" }}>
+    <Icon name="save" animation="hover" />
+    保存
+  </DotButton>
+  <DotCount to={12345} suffix=" PT" data-count-to="12345" />
+  <DotProgress value={42} max={115} label="進捗" />
+</section>
+
+<script>
+  import { mountDotCount, mountDotField, mountDotRipple } from "dotterel-ui/dom";
+
+  for (const host of document.querySelectorAll<HTMLElement>(".dotterel-ripple-host")) {
+    mountDotRipple(host);
+  }
+
+  for (const element of document.querySelectorAll<HTMLElement>("[data-count-to]")) {
+    mountDotCount(element, {
+      to: Number(element.dataset.countTo),
+      suffix: " PT",
+      startOn: "view",
+    });
+  }
+
+  const field = document.querySelector<HTMLElement>(".hero .dotterel-field");
+
+  if (field !== null) {
+    mountDotField(field, { density: 0.7, speed: 0.8 });
+  }
+</script>
+```
+
+`Icon` と `DotProgress` は HTML と CSS だけで成立するので、何も呼ぶ必要はありません。
+
+静的に描いたマークアップから読み取れるのは見た目に出ている値だけです。`DotButton` の `ripple` の `shape` と `duration` はレイヤーから読み取りますが、`size` と `media` は `mountDotRipple` へ渡し直してください。`DotCount` の数値と整形 (`to`、`from`、`suffix` など) と、`DotField` の描き方 (`density`、`speed` など) も同様に渡し直します。
+
+### mountDotRipple
+
+`useDotRipple` と同じ `shape`、`size`、`duration`、`media` を受け取り、`host` の最初の子にマス目のレイヤーを置きます。寸法の変化へ追従し、押したときの処理 (pointerdown は押した位置から、キーボードでの実行は中心から) もホストへ付けます。`disabled` と `aria-disabled="true"` のホストでは動きません。
+
+| オプション | 既定値 | 説明 |
+| --- | --- | --- |
+| `shape` / `size` / `duration` / `media` | `useDotRipple` と同じ | マスの形、大きさ、明滅の時間、マスを作る条件 |
+| `bindEvents` | `true` | `false` にすると押したときの処理を付けない。戻り値の `press(clientX, clientY)` を自分で呼ぶ |
+| `onChange` | なし | マス目が作り直されたときに `{ hasCells, sweepMs }` を受け取る |
+
+サイドシートのように開閉をリップルに合わせる場合は、`hasCells()` と `sweepMs()` を読みます。
+
+### mountDotCount
+
+`DotCount` と同じオプション (`to`、`from`、`duration`、`delay`、`easing`、`motion`、`decimals`、`separator`、`decimal`、`prefix`、`suffix`、`label`、`font`、`density`、`onStart`、`onComplete`) を受け取ります。開始のきっかけは `startOn` (`"mount"`、`"view"`、`"manual"`) で決めます。`useDotCount` と同じ `autoStart: false` は `startOn: "manual"` と同じ意味です。`prefers-reduced-motion: reduce` では、`motion="auto"` のとき最終値をすぐに表示します。
+
+数え方だけを使い、表示を自分で組みたい場合は、`useDotCount` と共通の進行役 `createCountRunner` を使えます。
+
+```ts
+import { createCountRunner, resolveCountSettings } from "dotterel-ui/dom";
+import { formatCount } from "dotterel-ui/core";
+
+const runner = createCountRunner(resolveCountSettings({ to: 9800 }), {
+  onValue: (value) => {
+    output.textContent = formatCount(value);
+  },
+  onStatus: (status) => {
+    output.dataset.status = status;
+  },
+});
+
+runner.start();
+```
+
+### mountDotField
+
+`DotField` と同じオプション (`color`、`density`、`dotSize`、`gap`、`maxDevicePixelRatio`、`motion`、`placement`、`shape`、`speed`) を受け取ります。`target` 自身かその直下に `.dotterel-field` があれば使い回し、無ければ `target` の末尾へ足します。描画は `DotField` と同じく端末の画素へ整数で合わせ、`motion="auto"` では OS のモーション設定に従います。
+
+### 片付け
+
+どの戻り値にも `destroy()` があります。見張り、イベント、アニメーションを止め、関数が差し込んだ要素を取り除きます (使い回した静的なマークアップは残します)。Astro の View Transitions などでページを差し替える場合は、差し替える前に呼んでください。
 
 ## 開発
 
