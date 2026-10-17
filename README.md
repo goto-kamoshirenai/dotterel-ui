@@ -6,7 +6,7 @@
 - TypeScript の型定義を同梱
 - ランタイム依存は React のみ
 - CSS変数で色、角、余白、モーションを変更可能
-- SSR対応
+- SSR対応。Next.js と Astro (`@astrojs/react`) で確認済み
 - `prefers-reduced-motion` と強制カラーモードに対応
 - 機能別のサブパスimportに対応
 
@@ -394,6 +394,95 @@ import { DotText } from "dotterel-ui/text";
 ```
 
 `dotterel-ui/core` は React に依存しません。
+
+## Astro で使う
+
+Astro では `@astrojs/react` を通して、そのまま利用できます。Astro 専用のビルドや設定は不要です。
+
+```bash
+pnpm astro add react
+pnpm add dotterel-ui
+```
+
+スタイルはレイアウトの frontmatter で一度読み込みます。同梱フォントは Astro (Vite) が `@font-face` の参照先を束ねるため、別途コピーする必要はありません。
+
+```astro
+---
+import "dotterel-ui/styles.css";
+---
+```
+
+### JavaScript なしで使えるもの
+
+`client:*` を付けない React コンポーネントは、ビルド時に HTML へ展開され、ブラウザでは JavaScript が動きません。次のコンポーネントは HTML と CSS だけで意味と見た目が成立するため、`.astro` ファイルから直接置けます。
+
+```astro
+---
+import { DotLink, DotProgress, DotText, Icon } from "dotterel-ui";
+import { formatCount } from "dotterel-ui/core";
+---
+
+<Icon name="crown" label="王冠" />
+<Icon name="search" animation="hover" />
+<DotLink href="/guide" variant="primary">ガイドを読む</DotLink>
+<DotProgress value={42} max={115} label="進捗" />
+<DotText as="h2">system online</DotText>
+<DotText tabular>{formatCount(12345)} PT</DotText>
+```
+
+`animation="hover"` のアイコンは CSS で動くため、`client:*` が無くてもホバーに反応します。`DotButton` と `DotLink` のリップルは JavaScript が必要なので、静的に置いた場合はリップルのない通常のボタンとリンクになります。
+
+`DotLinkAdapter` は子要素を React 要素として受け取るため、`.astro` から直接は使えません。Astro のページ内リンクには `DotLink` を使い、`DotLinkAdapter` は island にした React コンポーネントの中で使ってください。
+
+### island にするもの
+
+動きや状態を持つコンポーネントには `client:*` ディレクティブを付けます。
+
+| コンポーネント | ディレクティブ | 付けない場合 |
+| --- | --- | --- |
+| `DotCount`、`useDotCount` | `client:visible` など | `from` の値 (既定は `0`) のまま止まる |
+| `DotField` | `client:idle` など | Canvas に描けないため何も表示されない |
+| `DotButton`、`DotLink` のリップル、`useDotRipple` | `client:*` | リップルのないボタンとリンクになる |
+
+```astro
+---
+import { DotCount, DotField } from "dotterel-ui";
+---
+
+<DotField client:idle density={0.7} speed={0.8} />
+<DotCount client:visible to={12345} suffix=" PT" />
+```
+
+`DotCount` は island が hydrate された時点で `startOn="mount"` の動きを始めるため、`client:visible` を付けると画面に入ってからカウントします。
+
+`onClick` などの関数は `.astro` から island へ渡せません。操作するボタンや `useDotCount` の制御は、React コンポーネントにまとめてから island にします。
+
+```tsx
+// src/components/Score.tsx
+import { DotButton, DotCount, Icon } from "dotterel-ui";
+
+export function Score({ points }: { points: number }) {
+  return (
+    <p>
+      <DotCount to={points} suffix=" PT" />
+      <DotButton variant="primary" onClick={() => console.log("saved")}>
+        <Icon name="save" animation="hover" />
+        保存
+      </DotButton>
+    </p>
+  );
+}
+```
+
+```astro
+---
+import { Score } from "../components/Score";
+---
+
+<Score client:load points={9800} />
+```
+
+ダークテーマの固定は、他の環境と同じく `<html data-dotterel-theme="dark">` で行います。
 
 ## 開発
 
