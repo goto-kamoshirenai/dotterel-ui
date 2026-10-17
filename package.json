@@ -50,6 +50,11 @@
       "import": "./dist/count/index.js",
       "default": "./dist/count/index.js"
     },
+    "./dom": {
+      "types": "./dist/dom/index.d.ts",
+      "import": "./dist/dom/index.js",
+      "default": "./dist/dom/index.js"
+    },
     "./effects": {
       "types": "./dist/effects/index.d.ts",
       "import": "./dist/effects/index.js",
@@ -117,6 +122,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "fonteditor-core": "^2.6.3",
     "globals": "^16.5.0",
+    "jsdom": "^29.1.1",
     "opentype.js": "^2.0.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
