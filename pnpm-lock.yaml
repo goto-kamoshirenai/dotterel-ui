@@ -40,6 +40,9 @@ importers:
       globals:
         specifier: ^16.5.0
         version: 16.5.0
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1
       opentype.js:
         specifier: ^2.0.0
         version: 2.0.0
