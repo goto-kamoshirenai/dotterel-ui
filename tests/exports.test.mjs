@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 test("all documented JavaScript export paths resolve", async () => {
-  const [root, button, core, count, dom, effects, icon, progress, text] = await Promise.all([
+  const [root, button, core, count, dom, effects, icon, progress, select, text] = await Promise.all([
     import("dotterel-ui"),
     import("dotterel-ui/button"),
     import("dotterel-ui/core"),
@@ -12,6 +12,7 @@ test("all documented JavaScript export paths resolve", async () => {
     import("dotterel-ui/effects"),
     import("dotterel-ui/icon"),
     import("dotterel-ui/progress"),
+    import("dotterel-ui/select"),
     import("dotterel-ui/text"),
   ]);
 
@@ -23,6 +24,7 @@ test("all documented JavaScript export paths resolve", async () => {
   assert.equal(root.DotField, effects.DotField);
   assert.equal(root.Icon, icon.Icon);
   assert.equal(root.DotProgress, progress.DotProgress);
+  assert.equal(root.DotSelect, select.DotSelect);
   assert.equal(root.DotText, text.DotText);
   assert.equal(typeof dom.mountDotRipple, "function");
   assert.equal(typeof dom.mountDotCount, "function");

@@ -85,6 +85,70 @@ test("アイコンだけのボタンに読み上げ名がある", async ({ page 
   await expect(iconOnly).toHaveAccessibleName("この行を削除");
 });
 
+test("プルダウンがドットで開き、キーボードで選べる", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const select = page.getByRole("combobox", { name: "表示密度" });
+  const panel = page.locator(".dotterel-select__panel");
+  await select.click();
+  await expect(panel).toBeVisible();
+  const revealCells = panel.locator(".dotterel-select__reveal .dotterel-ripple__cell");
+  await expect(revealCells.first()).toBeAttached();
+  await expect(panel.locator(".dotterel-select__surface")).toHaveCSS("animation-name", "dotterel-select-surface");
+  const firstDelay = await revealCells.first().evaluate((cell) => parseFloat(getComputedStyle(cell).animationDelay));
+  const lastDelay = await revealCells.last().evaluate((cell) => parseFloat(getComputedStyle(cell).animationDelay));
+  expect(lastDelay).toBeGreaterThan(firstDelay);
+  const timing = await panel.evaluate((element) => {
+    const cells = [...element.querySelectorAll(".dotterel-select__reveal .dotterel-ripple__cell")];
+    const lastDot = Math.max(...cells.map((cell) => {
+      const style = getComputedStyle(cell);
+      return parseFloat(style.animationDelay) + parseFloat(style.animationDuration);
+    }));
+    const surface = element.querySelector(".dotterel-select__surface")!;
+    return {
+      lastDot,
+      surfaceStart: parseFloat(getComputedStyle(surface).animationDelay),
+      overflows: surface.scrollWidth > surface.clientWidth || surface.scrollHeight > surface.clientHeight,
+    };
+  });
+  expect(timing.surfaceStart).toBeGreaterThan(timing.lastDot);
+  expect(timing.overflows).toBe(false);
+  const midFade = await panel.evaluate((element) => {
+    const reveal = element.querySelector(".dotterel-select__reveal")!;
+    const surface = element.querySelector(".dotterel-select__surface")!;
+    const middle = parseFloat(getComputedStyle(surface).animationDelay) * 1000 + 110;
+    const animations = [...reveal.getAnimations(), ...surface.getAnimations()];
+    for (const animation of animations) {
+      animation.pause();
+      animation.currentTime = middle;
+    }
+    const state = {
+      revealOpacity: getComputedStyle(reveal).opacity,
+      dotBackground: getComputedStyle(reveal.querySelector(".dotterel-ripple__cell")!).backgroundColor,
+      surfaceOpacity: parseFloat(getComputedStyle(surface).opacity),
+      surfaceBackground: getComputedStyle(surface).backgroundColor,
+    };
+    for (const animation of animations) animation.finish();
+    return state;
+  });
+  expect(midFade.revealOpacity).toBe("1");
+  expect(midFade.surfaceOpacity).toBeGreaterThan(0);
+  expect(midFade.surfaceOpacity).toBeLessThan(1);
+  expect(midFade.dotBackground).toBe(midFade.surfaceBackground);
+  await expect(revealCells.first()).toHaveCSS("opacity", "1");
+  await expect(revealCells.last()).toHaveCSS("opacity", "1");
+  const reveal = panel.locator(".dotterel-select__reveal");
+  await expect(reveal).toHaveCSS("visibility", "hidden");
+  await expect(reveal).toHaveCSS("opacity", "0");
+  const option = page.getByRole("option", { name: "コンパクト" });
+  await option.hover();
+  await expect(option.locator(".dotterel-ripple__cell").first()).toHaveCSS("opacity", "1");
+  await expect(reveal).toHaveCSS("visibility", "hidden");
+  await expect(reveal).toHaveCSS("opacity", "0");
+  await page.keyboard.press("Enter");
+  await expect(select).toContainText("コンパクト");
+  await expect(panel).toBeHidden();
+});
+
 for (const theme of ["light", "dark"] as const) {
   test(`${theme} でアイコン一覧が判別できる`, async ({ page }) => {
     // ラジオ自体は視覚的に隠しているので、実際の操作と同じくラベルを押す
