@@ -27,6 +27,7 @@
       "dotterel-ui/effects": ["../src/effects/index.ts"],
       "dotterel-ui/icon": ["../src/icon/index.ts"],
       "dotterel-ui/progress": ["../src/progress/index.ts"],
+      "dotterel-ui/select": ["../src/select/index.ts"],
       "dotterel-ui/text": ["../src/text/index.ts"]
     }
   },
