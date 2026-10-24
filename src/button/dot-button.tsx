@@ -49,6 +49,8 @@ export type DotRipple = {
   readonly press: (clientX: number | null, clientY: number | null) => void;
   /** マスを作れたか (作れない大きさでは演出の代わりに面をそのまま出す) */
   readonly hasCells: boolean;
+  /** 描画中のマスの行数。縦方向の演出時間を合わせるために使う */
+  readonly rows: number;
   /** 横へ1列ずつ流しきる時間 (ms)。隠す・見せるの切り替えをこれに合わせる */
   readonly sweepMs: number;
 };
@@ -340,10 +342,11 @@ export function useDotRipple(options?: DotRippleOptions | "none"): DotRipple {
   // 条件に合わないあいだは、前に測ったマスがあっても描かない
   const activeGrid = mediaMatches ? grid : null;
   const hasCells = (activeGrid?.cells.length ?? 0) > 0;
+  const rows = activeGrid?.rows ?? 0;
   const sweepMs = sweepDuration(activeGrid?.columns ?? 1);
 
   if (!enabled) {
-    return { layer: null, press, hasCells: false, sweepMs };
+    return { layer: null, press, hasCells: false, rows: 0, sweepMs };
   }
 
   // クラス名とCSS変数は DOM 版 (mountDotRipple) と同じ組み立てを使い、ずれないようにする
@@ -364,5 +367,5 @@ export function useDotRipple(options?: DotRippleOptions | "none"): DotRipple {
     </span>
   );
 
-  return { layer, press, hasCells, sweepMs };
+  return { layer, press, hasCells, rows, sweepMs };
 }
