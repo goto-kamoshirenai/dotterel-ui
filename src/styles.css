@@ -323,6 +323,154 @@
     cursor: progress;
   }
 
+  .dotterel-select {
+    position: relative;
+    display: inline-block;
+    min-width: 12rem;
+    font-family: var(--dotterel-font-family);
+  }
+
+  .dotterel-select__trigger {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--dotterel-space-3);
+    padding: var(--dotterel-space-2) var(--dotterel-space-4);
+    border: var(--dotterel-border-width) solid var(--dotterel-color-border);
+    border-radius: var(--dotterel-radius);
+    background: var(--dotterel-color-surface);
+    color: var(--dotterel-color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .dotterel-select__trigger:focus-visible {
+    outline: 3px solid var(--dotterel-color-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .dotterel-select__trigger:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .dotterel-select__value[data-placeholder="true"] {
+    color: var(--dotterel-color-text-muted);
+  }
+
+  .dotterel-select__chevron {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    rotate: 45deg;
+  }
+
+  .dotterel-select[data-open="true"] .dotterel-select__chevron {
+    rotate: 225deg;
+  }
+
+  .dotterel-select__panel {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .dotterel-select[data-open="true"] .dotterel-select__panel {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .dotterel-select__reveal {
+    --dotterel-ripple-fill: var(--dotterel-color-surface);
+
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .dotterel-select__surface {
+    position: relative;
+    z-index: 1;
+    max-height: 16rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: var(--dotterel-border-width) solid var(--dotterel-color-border);
+    border-radius: var(--dotterel-radius);
+    background: var(--dotterel-color-surface);
+    box-shadow: 0 8px 24px color-mix(in oklab, var(--dotterel-color-text) 16%, transparent);
+  }
+
+  .dotterel-select__options {
+    padding: 4px;
+  }
+
+  .dotterel-select__option {
+    --dotterel-ripple-fill: var(--dotterel-color-border-subtle);
+
+    min-height: 40px;
+    padding: 9px 12px;
+    color: var(--dotterel-color-text);
+    cursor: pointer;
+  }
+
+  .dotterel-select__option[data-active="true"]:not(:hover) {
+    background: var(--dotterel-color-border-subtle);
+  }
+
+  .dotterel-select__option[aria-selected="true"] {
+    color: var(--dotterel-color-accent);
+    font-weight: 700;
+  }
+
+  .dotterel-select__option[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dotterel-select[data-open="true"] .dotterel-select__reveal {
+      animation: dotterel-select-reveal-hide 1ms step-end
+        calc(var(--dotterel-select-reveal-ms) + 220ms) both;
+    }
+
+    .dotterel-select[data-open="true"] .dotterel-select__surface {
+      animation: dotterel-select-surface 220ms ease-out
+        var(--dotterel-select-reveal-ms) both;
+    }
+
+    .dotterel-select[data-open="true"] .dotterel-select__reveal .dotterel-ripple__cell {
+      animation: dotterel-select-fill 16ms step-end both;
+      animation-delay: calc(
+        var(--dotterel-ripple-cy) * 32ms + var(--dotterel-ripple-jitter) * 2
+      );
+    }
+  }
+
+  @keyframes dotterel-select-surface {
+    from { opacity: 0; visibility: hidden; }
+    to { opacity: 1; visibility: visible; }
+  }
+
+  @keyframes dotterel-select-reveal-hide {
+    from { opacity: 1; visibility: visible; }
+    to { opacity: 0; visibility: hidden; }
+  }
+
+  @keyframes dotterel-select-fill {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
   /*
    * リップルは面をマス目で覆い、1マスずつ塗り替える。
    * - マスの間に余白は置かない。余白があるとドットが下地の上に乗って見え、

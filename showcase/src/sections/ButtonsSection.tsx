@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { DotButton, DotLink, DotLinkAdapter } from "dotterel-ui/button";
 import { Icon } from "dotterel-ui/icon";
+import { DotSelect } from "dotterel-ui/select";
 
 import { DemoFrame } from "../components/DemoFrame";
 
@@ -113,6 +114,32 @@ export function ButtonsSection() {
               リップルなし
             </DotButton>
           </div>
+        </DemoFrame>
+
+        <DemoFrame
+          title="ドットで開くプルダウン"
+          description="上から下へドットが走り、最後に枠が現れます。候補のホバーもマス目で塗り替わります。"
+          code={`<DotSelect
+  aria-label="表示密度"
+  name="density"
+  defaultValue="comfortable"
+  options={[
+    { value: "comfortable", label: "標準" },
+    { value: "compact", label: "コンパクト" },
+    { value: "spacious", label: "ゆったり" },
+  ]}
+/>`}
+        >
+          <DotSelect
+            aria-label="表示密度"
+            name="density"
+            defaultValue="comfortable"
+            options={[
+              { value: "comfortable", label: "標準" },
+              { value: "compact", label: "コンパクト" },
+              { value: "spacious", label: "ゆったり" },
+            ]}
+          />
         </DemoFrame>
 
         <DemoFrame

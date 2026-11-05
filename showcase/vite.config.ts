@@ -28,7 +28,7 @@ export default defineConfig({
       { find: /^dotterel-ui\/styles\.css$/, replacement: librarySource("styles.css") },
       { find: /^dotterel-ui\/fonts\/(.+)$/, replacement: librarySource("fonts/$1") },
       {
-        find: /^dotterel-ui\/(button|core|count|effects|icon|progress|text)$/,
+        find: /^dotterel-ui\/(button|core|count|effects|icon|progress|select|text)$/,
         replacement: librarySource("$1/index.ts"),
       },
       { find: /^dotterel-ui$/, replacement: librarySource("index.ts") },

@@ -4,4 +4,5 @@ export * from "./count/index.js";
 export * from "./effects/index.js";
 export * from "./icon/index.js";
 export * from "./progress/index.js";
+export * from "./select/index.js";
 export * from "./text/index.js";

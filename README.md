@@ -57,6 +57,25 @@ export function Dashboard() {
 }
 ```
 
+## プルダウン
+
+`DotSelect` は、上から下へドットを走らせてから選択肢の枠を表示します。選択肢のホバーにもボタンと同じドットの塗り替わりを使います。矢印キー、Home、End、Enter、Space、Escape に対応します。動きを減らす設定ではアニメーションを止めます。
+
+```tsx
+import { DotSelect } from "dotterel-ui/select";
+
+<DotSelect
+  aria-label="表示密度"
+  name="density"
+  defaultValue="comfortable"
+  options={[
+    { value: "comfortable", label: "標準" },
+    { value: "compact", label: "コンパクト" },
+  ]}
+  onValueChange={(value) => console.log(value)}
+/>;
+```
+
 ## アイコン
 
 登録済みアイコンは `Icon` で描画します。色は `currentColor` を継承します。
